@@ -21,39 +21,43 @@ export default function App() {
     <View style={styles.container}>
       { weather ? (
         <>
-          <Text style={styles.temp}>{formatTemp(weather.current.temp)}</Text>
-          { weather.current.weather.length > 0 ? (
-            <>
-              <Text style={styles.condition}>
-                {weather.current.weather[0].description}
-              </Text>
-              <Image
-                style={styles.icon}
-                source={{ uri: `http://openweathermap.org/img/wn/${weather.current.weather[0].icon}@2x.png` }}
-              />
-            </>
-          ) : undefined}
-          {weather.daily.map(day => (
-            <View style={styles.forecast} key={day.dt.toString()}>
-              <View style={styles.forecast.day}>
-                {formatDateFromUnix(day.dt)}
+          <View style={styles.current}>
+            <Text style={styles.temp}>{formatTemp(weather.current.temp)}</Text>
+            { weather.current.weather.length > 0 ? (
+              <>
+                <Text style={styles.condition}>
+                  {weather.current.weather[0].description}
+                </Text>
+                <Image
+                  style={styles.icon}
+                  source={{ uri: `http://openweathermap.org/img/wn/${weather.current.weather[0].icon}@2x.png` }}
+                />
+              </>
+            ) : undefined}
+          </View>
+          <View style={styles.daily}>
+            {weather.daily.map(day => (
+              <View style={styles.forecast} key={day.dt.toString()}>
+                <View style={styles.forecastDay}>
+                  {formatDateFromUnix(day.dt)}
+                </View>
+                <View style={styles.forecastTemp}>
+                  {formatTemp(day.temp.min)} / {formatTemp(day.temp.max)}
+                </View>
+                {day.weather.length > 0 ? (
+                  <View style={styles.forecastCondition}>
+                    <Text style={styles.forecastConditionName}>
+                      {day.weather[0].main}
+                    </Text>
+                    <Image
+                      style={styles.forecastIcon}
+                      source={{ uri: `http://openweathermap.org/img/wn/${day.weather[0].icon}.png` }}
+                    />
+                  </View>
+                ) : undefined}
               </View>
-              <View style={styles.forecast.temp}>
-                {formatTemp(day.temp.min)} / {formatTemp(day.temp.max)}
-              </View>
-              {day.weather.length > 0 ? (
-                <>
-                  <Text>
-                    {day.weather[0].main}
-                  </Text>
-                  <Image
-                    style={styles.smallIcon}
-                    source={{ uri: `http://openweathermap.org/img/wn/${day.weather[0].icon}.png` }}
-                  />
-                </>
-              ) : undefined}
-            </View>
-          ))}
+            ))}
+          </View>
         </>
       ) : undefined }
       <StatusBar style="auto" />
@@ -61,18 +65,38 @@ export default function App() {
   );
 }
 
+// colors from https://color.adobe.com/explore;
+const colors = {
+  accent: '#FAD41B',
+  back: '#FAF8EB',
+  dark: '#54565B',
+  light: '#76777B',
+  lighter: '#939598',
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.back,
+    color: colors.dark,
     alignItems: 'center',
+    justifyContent: 'space-around',
+  },
+  current: {
+    display: 'flex',
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  daily: {
+    width: '100%',
   },
   temp: {
     fontSize: 72,
+    color: colors.dark,
   },
   condition: {
-    fontSize: 24,
+    fontSize: 20,
+    color: colors.light,
   },
   icon: {
     width: 100,
@@ -82,19 +106,24 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-evenly',
-    width: '100%',  
+    width: '100%',
     gap: 16,
-    day: {
-      flex: 1
-    },
-    temp: {
-      flex: 1
-    },
-    condition: {
-      flex: 1
-    }
   },
-  smallIcon: {
+  forecastDay: {
+    flex: 1
+  },
+  forecastTemp: {
+    flex: 1
+  },
+  forecastCondition: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'row',
+  },
+  forecastConditionName: {
+    color: colors.light,
+  },
+  forecastIcon: {
     width: 24,
     height: 24
   }
