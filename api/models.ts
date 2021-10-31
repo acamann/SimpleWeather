@@ -49,7 +49,7 @@ interface HourlyWeather {
 }
 
 interface DailyWeather {
-  dt: Date,
+  dt: number,
   sunrise: Date,
   sunset: Date,
   moonrise: Date,
