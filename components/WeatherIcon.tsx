@@ -2,21 +2,18 @@ import React from 'react';
 import { Image, ImageProps } from 'react-native';
 
 type WeatherIconProps = Omit<ImageProps, "source"> & {
-  conditionId: number;
+  conditionId?: number;
 };
 
 // Alternative Weather Icons from https://erikflowers.github.io/weather-icons/
 const WeatherIcon: React.FC<WeatherIconProps> = (props: WeatherIconProps) => {
   const conditionId = props.conditionId;
-
-  console.log([conditionId, conditionIconMap.get(conditionId)]);
-
-  return (
+  return conditionId ? (
     <Image
       {...props}
       source={require(`../assets/weather-icons/wi-${conditionIconMap.get(conditionId)}.svg`)}
     />
-  );
+  ) : null;
 }
 
 export default WeatherIcon;

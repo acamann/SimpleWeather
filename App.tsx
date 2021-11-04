@@ -27,26 +27,24 @@ export default function App() {
       { weather ? (
         <>
           <View style={styles.current}>
-            { weather.current.weather.length > 0 ? (
-              <WeatherIcon
-                style={styles.icon}
-                conditionId={weather.current.weather[0].id}
-              />
-            ) : undefined }
+            <WeatherIcon
+              style={styles.icon}
+              conditionId={weather.current.weather[0]?.id}
+            />
             <View style={styles.currentTemps}>
-              <StyledText style={styles.temp}>{formatTemp(weather.current.temp)}</StyledText>
-              <View style={styles.currentInfo}>
-                <StyledText>Feels like {formatTemp(weather.current.feels_like)}</StyledText>
-                { weather.current.weather.length > 0 ? (
-                  <StyledText style={styles.condition}>
-                    {weather.current.weather[0].description}
-                  </StyledText>
-                ) : undefined }
-              </View>
+              <StyledText style={styles.temp}>
+                {formatTemp(weather.current.temp)}
+              </StyledText>
+              <StyledText>
+                {weather.current.weather.length > 0 ? (
+                  `${weather.current.weather[0].description}, `
+                ) : undefined}
+                feels like {formatTemp(weather.current.feels_like)}
+              </StyledText>
             </View>
           </View>
           <View style={styles.forecastWrapper}>
-            {weather.hourly.slice(0, 10).map(hour => (
+            {weather.hourly.slice(0, 12).map(hour => (
               <View style={styles.forecast} key={hour.dt.toString()}>
                 <StyledText style={styles.forecastDateTime}>
                   {formatTimeFromUnix(hour.dt)}
@@ -55,17 +53,17 @@ export default function App() {
                   {formatTemp(hour.temp)}
                 </StyledText>
                 <StyledText>
-                  {hour.pop > 0 ? `${hour.pop*100}%` : "-"}
+                  {hour.pop > 0 ? `${hour.pop*100}%` : undefined}
                 </StyledText>
                 <StyledText>
-                  {hour.rain ? `${hour.rain["1h"]}` : "-"}
+                  {hour.rain ? `${hour.rain["1h"]}` : undefined}
                 </StyledText>
                 <WeatherCondition weather={hour.weather} />
               </View>
             ))}
           </View>
           <View style={styles.forecastWrapper}>
-            {weather.daily.slice(0, 5).map(day => (
+            {weather.daily.slice(0, 7).map(day => (
               <View style={styles.forecast} key={day.dt.toString()}>
                 <StyledText style={styles.forecastDateTime}>
                   {formatDateFromUnix(day.dt)}
@@ -101,7 +99,6 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'flex-start'
-    //justifyContent: 'center',
   },
   currentTemps: {
     flex: 1,
@@ -113,26 +110,14 @@ const styles = StyleSheet.create({
     fontSize: 64,
     color: colors.dark,
   },
-  currentInfo: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-end'
-  },
   forecastWrapper: {
-    width: '100%',
-    //padding: 8
-  },
-  condition: {
-    fontSize: 20,
-    color: colors.light,
+    width: '100%'
   },
   icon: {
     width: 100,
     height: 100
   },
   forecast: {
-    //paddingLeft: 16,
-    //paddingRight: 16,
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-evenly',
