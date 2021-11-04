@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, Image } from 'react-native';
 import { OneCallWeatherResponse } from './api/models';
 import { getCurrentWeather } from './api/OpenWeatherMap';
+import { colors } from './components/Colors';
+import StyledText from './components/StyledText';
 import WeatherCondition from './components/WeatherCondition';
 
 const formatTemp = (temp: number): string => `${Math.round(temp)} \u00B0F`;
@@ -24,12 +26,12 @@ export default function App() {
       { weather ? (
         <>
           <View style={styles.current}>
-            <Text style={styles.temp}>{formatTemp(weather.current.temp)}</Text>
+            <StyledText style={styles.temp}>{formatTemp(weather.current.temp)}</StyledText>
             { weather.current.weather.length > 0 ? (
               <>
-                <Text style={styles.condition}>
+                <StyledText style={styles.condition}>
                   {weather.current.weather[0].description}
-                </Text>
+                </StyledText>
                 <Image
                   style={styles.icon}
                   source={{ uri: `http://openweathermap.org/img/wn/${weather.current.weather[0].icon}@2x.png` }}
@@ -40,15 +42,15 @@ export default function App() {
           <View style={styles.forecastWrapper}>
             {weather.hourly.slice(0, 10).map(hour => (
               <View style={styles.forecast} key={hour.dt.toString()}>
-                <Text style={styles.forecastDateTime}>
+                <StyledText style={styles.forecastDateTime}>
                   {formatTimeFromUnix(hour.dt)}
-                </Text>
-                <Text style={styles.forecastTemp}>
+                </StyledText>
+                <StyledText>
                   {formatTemp(hour.temp)}
-                </Text>
-                <Text style={styles.forecastTemp}>
+                </StyledText>
+                <StyledText>
                   {hour.pop > 0 ? `${hour.pop*100}%` : undefined}
-                </Text>
+                </StyledText>
                 <WeatherCondition weather={hour.weather} />
               </View>
             ))}
@@ -56,15 +58,15 @@ export default function App() {
           <View style={styles.forecastWrapper}>
             {weather.daily.slice(0, 5).map(day => (
               <View style={styles.forecast} key={day.dt.toString()}>
-                <Text style={styles.forecastDateTime}>
+                <StyledText style={styles.forecastDateTime}>
                   {formatDateFromUnix(day.dt)}
-                </Text>
-                <Text style={styles.forecastTemp}>
+                </StyledText>
+                <StyledText>
                   &#8593; {formatTemp(day.temp.max)}
-                </Text>
-                <Text style={styles.forecastTemp}>
+                </StyledText>
+                <StyledText>
                   &#8595; {formatTemp(day.temp.min)}
-                </Text>
+                </StyledText>
                 <WeatherCondition weather={day.weather} />
               </View>
             ))}
@@ -75,15 +77,6 @@ export default function App() {
     </View>
   );
 }
-
-// colors from https://color.adobe.com/explore;
-const colors = {
-  accent: '#FAD41B',
-  back: '#FAF8EB',
-  dark: '#54565B',
-  light: '#76777B',
-  lighter: '#939598',
-};
 
 const styles = StyleSheet.create({
   container: {
@@ -126,8 +119,5 @@ const styles = StyleSheet.create({
   },
   forecastDateTime: {
     flex: 1
-  },
-  forecastTemp: {
-    //flex: 1
-  },
+  }
 });
