@@ -1,5 +1,5 @@
 
-interface Weather {
+export interface Weather {
   id: number,
   main: string,
   description: string,
@@ -32,7 +32,7 @@ interface MinuteWeather {
 }
 
 interface HourlyWeather {
-  dt: Date,
+  dt: number,
   temp: number,
   feels_like: number,
   pressure: number,
@@ -45,7 +45,7 @@ interface HourlyWeather {
   wind_deg: number,
   wind_gust: number,
   weather: Weather[],
-  pop: number
+  pop: number,
 }
 
 interface DailyWeather {
