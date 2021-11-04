@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
 import StyledText from "./StyledText";
 import { Weather } from '../api/models';
+import WeatherIcon from './WeatherIcon';
 
 interface WeatherConditionProps {
   weather: Weather[];
@@ -15,9 +16,9 @@ const WeatherCondition: React.FC<WeatherConditionProps> = (props: WeatherConditi
       <StyledText>
         {weather[0].main}
       </StyledText>
-      <Image
+      <WeatherIcon
+        conditionId={weather[0].id}
         style={styles.icon}
-        source={{ uri: `http://openweathermap.org/img/wn/${weather[0].icon}.png` }}
       />
     </View>
   ) : null;

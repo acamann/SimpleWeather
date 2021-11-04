@@ -6,6 +6,7 @@ import { getCurrentWeather } from './api/OpenWeatherMap';
 import { colors } from './components/Colors';
 import StyledText from './components/StyledText';
 import WeatherCondition from './components/WeatherCondition';
+import WeatherIcon from './components/WeatherIcon';
 
 const formatTemp = (temp: number): string => `${Math.round(temp)} \u00B0F`;
 const formatDateFromUnix = (dt: number): string => new Date(dt * 1000).toLocaleDateString("en-US", { weekday: 'short', month: 'short', day: 'numeric' })
@@ -27,9 +28,9 @@ export default function App() {
         <>
           <View style={styles.current}>
             { weather.current.weather.length > 0 ? (
-              <Image
+              <WeatherIcon
                 style={styles.icon}
-                source={{ uri: `http://openweathermap.org/img/wn/${weather.current.weather[0].icon}@2x.png` }}
+                conditionId={weather.current.weather[0].id}
               />
             ) : undefined }
             <View style={styles.currentTemps}>
@@ -127,7 +128,7 @@ const styles = StyleSheet.create({
   },
   icon: {
     width: 100,
-    height: 100,
+    height: 100
   },
   forecast: {
     //paddingLeft: 16,
