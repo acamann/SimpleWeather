@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, StyleSheet, TextProps } from 'react-native';
-import { colors } from '../css/Colors';
+import { colors } from './Colors';
 
 const StyledText: React.FC<TextProps> = (props: TextProps) => {
   return (
