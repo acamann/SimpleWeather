@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, Image } from 'react-native';
 import { OneCallWeatherResponse } from './api/models';
 import { getCurrentWeather } from './api/OpenWeatherMap';
-import { colors } from './components/Colors';
+import { colors } from './css/Colors';
 import StyledText from './components/StyledText';
 import WeatherCondition from './components/WeatherCondition';
 
