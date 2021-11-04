@@ -46,6 +46,7 @@ interface HourlyWeather {
   wind_gust: number,
   weather: Weather[],
   pop: number,
+  rain?: { "1h": number }
 }
 
 interface DailyWeather {

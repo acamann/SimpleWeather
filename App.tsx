@@ -26,18 +26,23 @@ export default function App() {
       { weather ? (
         <>
           <View style={styles.current}>
-            <StyledText style={styles.temp}>{formatTemp(weather.current.temp)}</StyledText>
             { weather.current.weather.length > 0 ? (
-              <>
-                <StyledText style={styles.condition}>
-                  {weather.current.weather[0].description}
-                </StyledText>
-                <Image
-                  style={styles.icon}
-                  source={{ uri: `http://openweathermap.org/img/wn/${weather.current.weather[0].icon}@2x.png` }}
-                />
-              </>
-            ) : undefined}
+              <Image
+                style={styles.icon}
+                source={{ uri: `http://openweathermap.org/img/wn/${weather.current.weather[0].icon}@2x.png` }}
+              />
+            ) : undefined }
+            <View style={styles.currentTemps}>
+              <StyledText style={styles.temp}>{formatTemp(weather.current.temp)}</StyledText>
+              <View style={styles.currentInfo}>
+                <StyledText>Feels like {formatTemp(weather.current.feels_like)}</StyledText>
+                { weather.current.weather.length > 0 ? (
+                  <StyledText style={styles.condition}>
+                    {weather.current.weather[0].description}
+                  </StyledText>
+                ) : undefined }
+              </View>
+            </View>
           </View>
           <View style={styles.forecastWrapper}>
             {weather.hourly.slice(0, 10).map(hour => (
@@ -49,7 +54,10 @@ export default function App() {
                   {formatTemp(hour.temp)}
                 </StyledText>
                 <StyledText>
-                  {hour.pop > 0 ? `${hour.pop*100}%` : undefined}
+                  {hour.pop > 0 ? `${hour.pop*100}%` : "-"}
+                </StyledText>
+                <StyledText>
+                  {hour.rain ? `${hour.rain["1h"]}` : "-"}
                 </StyledText>
                 <WeatherCondition weather={hour.weather} />
               </View>
@@ -80,24 +88,38 @@ export default function App() {
 
 const styles = StyleSheet.create({
   container: {
+    padding: 16,
     flex: 1,
     backgroundColor: colors.back,
     color: colors.dark,
     alignItems: 'center',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
   },
   current: {
+    width: '100%',
     display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: 'row',
+    alignItems: 'flex-start'
+    //justifyContent: 'center',
+  },
+  currentTemps: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-end'
+  },
+  temp: {
+    fontSize: 64,
+    color: colors.dark,
+  },
+  currentInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-end'
   },
   forecastWrapper: {
     width: '100%',
-    padding: 8
-  },
-  temp: {
-    fontSize: 72,
-    color: colors.dark,
+    //padding: 8
   },
   condition: {
     fontSize: 20,
@@ -108,8 +130,8 @@ const styles = StyleSheet.create({
     height: 100,
   },
   forecast: {
-    paddingLeft: 16,
-    paddingRight: 16,
+    //paddingLeft: 16,
+    //paddingRight: 16,
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-evenly',
