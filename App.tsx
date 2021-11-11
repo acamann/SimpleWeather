@@ -11,6 +11,7 @@ import WeatherIcon from './components/WeatherIcon';
 const formatTemp = (temp: number): string => `${Math.round(temp)} \u00B0F`;
 const formatDateFromUnix = (dt: number): string => new Date(dt * 1000).toLocaleDateString("en-US", { weekday: 'short', month: 'short', day: 'numeric' })
 const formatTimeFromUnix = (dt: number): string => new Date(dt * 1000).toLocaleTimeString("en-US", { hour: 'numeric', minute: '2-digit' });
+const formatPercent = (float: number): string => `${Math.floor(float*100)}%`
 
 export default function App() {
   const [weather, setWeather] = useState<OneCallWeatherResponse>();
@@ -53,7 +54,7 @@ export default function App() {
                   {formatTemp(hour.temp)}
                 </StyledText>
                 <StyledText>
-                  {hour.pop > 0 ? `${hour.pop*100}%` : undefined}
+                  {hour.pop > 0 ? formatPercent(hour.pop) : undefined}
                 </StyledText>
                 <StyledText>
                   {hour.rain ? `${hour.rain["1h"]}` : undefined}
