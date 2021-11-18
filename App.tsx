@@ -53,10 +53,10 @@ export default function App() {
                 <StyledText>
                   {formatTemp(hour.temp)}
                 </StyledText>
-                <StyledText>
+                <StyledText style={{ width: 30 }}>
                   {hour.pop > 0 ? formatPercent(hour.pop) : undefined}
                 </StyledText>
-                <StyledText>
+                <StyledText style={{ width: 30 }}>
                   {hour.rain ? `${hour.rain["1h"]}` : undefined}
                 </StyledText>
                 <WeatherCondition weather={hour.weather} />
