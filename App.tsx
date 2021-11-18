@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Image } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { StyleSheet, Text, View, Image, TouchableHighlight } from 'react-native';
 import { OneCallWeatherResponse } from './api/models';
 import { getCurrentWeather } from './api/OpenWeatherMap';
 import { colors } from './components/Colors';
@@ -16,12 +16,31 @@ const formatPercent = (float: number): string => `${Math.floor(float*100)}%`
 export default function App() {
   const [weather, setWeather] = useState<OneCallWeatherResponse>();
 
+  const [isZoomingHourly, setIsZoomingHourly] = useState<boolean>(false);
+  const [isZoomingDaily, setIsZoomingDaily] = useState<boolean>(false);
+
   useEffect(() => {
     getCurrentWeather({
       onSuccess: (weather): void => setWeather(weather),
       onFailure: (error): void => console.log(["It didn't work!", error]),
     })
-  }, [])
+  }, []);
+
+  const toggleHourlyZoom = (): void => {
+    setIsZoomingHourly(isZooming => !isZooming);
+  }
+
+  const toggleDailyZoom = (): void => {
+    setIsZoomingDaily(isZooming => !isZooming);
+  }
+
+  const dailyForecast = useMemo(() => 
+    weather === undefined || isZoomingHourly ? [] : weather.daily.slice(0, isZoomingDaily ? 7 : 4)
+  , [weather, isZoomingHourly, isZoomingDaily]);
+
+  const hourlyForecast = useMemo(() => 
+    weather === undefined ? [] : weather.hourly.slice(0, isZoomingDaily ? 6 : isZoomingHourly ? 18 : 12)
+  , [weather, isZoomingHourly, isZoomingDaily]);
 
   return (
     <View style={styles.container}>
@@ -44,41 +63,48 @@ export default function App() {
               </StyledText>
             </View>
           </View>
-          <View style={styles.forecastWrapper}>
-            {weather.hourly.slice(0, 12).map(hour => (
-              <View style={styles.forecast} key={hour.dt.toString()}>
-                <StyledText style={styles.forecastDateTime}>
-                  {formatTimeFromUnix(hour.dt)}
-                </StyledText>
-                <StyledText>
-                  {formatTemp(hour.temp)}
-                </StyledText>
-                <StyledText style={{ width: 30 }}>
-                  {hour.pop > 0 ? formatPercent(hour.pop) : undefined}
-                </StyledText>
-                <StyledText style={{ width: 30 }}>
-                  {hour.rain ? `${hour.rain["1h"]}` : undefined}
-                </StyledText>
-                <WeatherCondition weather={hour.weather} />
-              </View>
-            ))}
-          </View>
-          <View style={styles.forecastWrapper}>
-            {weather.daily.slice(0, 7).map(day => (
-              <View style={styles.forecast} key={day.dt.toString()}>
-                <StyledText style={styles.forecastDateTime}>
-                  {formatDateFromUnix(day.dt)}
-                </StyledText>
-                <StyledText>
-                  &#8593; {formatTemp(day.temp.max)}
-                </StyledText>
-                <StyledText>
-                  &#8595; {formatTemp(day.temp.min)}
-                </StyledText>
-                <WeatherCondition weather={day.weather} />
-              </View>
-            ))}
-          </View>
+          <TouchableHighlight onPress={toggleHourlyZoom} style={{ padding: 0 }}>
+            <View style={styles.forecastWrapper}>
+              {hourlyForecast.map(hour => (
+                <View style={styles.forecast} key={hour.dt.toString()}>
+                  <StyledText style={styles.forecastDateTime}>
+                    {formatTimeFromUnix(hour.dt)}
+                  </StyledText>
+                  <StyledText>
+                    {formatTemp(hour.temp)}
+                  </StyledText>
+                  <StyledText style={{ width: 30 }}>
+                    {hour.pop > 0 ? formatPercent(hour.pop) : undefined}
+                  </StyledText>
+                  <StyledText style={{ width: 30 }}>
+                    {hour.rain ? `${hour.rain["1h"]}` : undefined}
+                  </StyledText>
+                  <WeatherCondition weather={hour.weather} />
+                </View>
+              ))}
+            </View>
+          </TouchableHighlight>
+          <TouchableHighlight onPress={toggleDailyZoom}>
+            <View
+              style={styles.forecastWrapper}
+              onResponderStart={toggleDailyZoom}
+            >
+              {dailyForecast.map(day => (
+                <View style={styles.forecast} key={day.dt.toString()}>
+                  <StyledText style={styles.forecastDateTime}>
+                    {formatDateFromUnix(day.dt)}
+                  </StyledText>
+                  <StyledText>
+                    &#8593; {formatTemp(day.temp.max)}
+                  </StyledText>
+                  <StyledText>
+                    &#8595; {formatTemp(day.temp.min)}
+                  </StyledText>
+                  <WeatherCondition weather={day.weather} />
+                </View>
+              ))}
+            </View>
+          </TouchableHighlight>
         </>
       ) : undefined }
       <StatusBar style="auto" />
