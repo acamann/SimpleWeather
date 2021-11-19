@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, Text, View, Image, TouchableHighlight, Pressable } from 'react-native';
+import { StyleSheet, View, Pressable, ActivityIndicator } from 'react-native';
 import { OneCallWeatherResponse } from './api/models';
 import { getCurrentWeather } from './api/OpenWeatherMap';
 import { colors } from './components/Colors';
@@ -30,12 +30,16 @@ export default function App() {
   }
 
   const dailyForecast = useMemo(() => 
-    weather === undefined || isZoomingHourly ? [] : weather.daily.slice(0, 7)
+    !weather || isZoomingHourly ? [] : weather.daily.slice(0, 7)
   , [weather, isZoomingHourly]);
 
   const hourlyForecast = useMemo(() => 
-    weather === undefined ? [] : weather.hourly.slice(0, isZoomingHourly ? 20 : 10)
+    weather?.hourly.slice(0, isZoomingHourly ? 20 : 10) ?? []
   , [weather, isZoomingHourly]);
+
+  const hasUpcomingPrecipitation = useMemo(() => 
+    weather?.minutely.some(min => min.precipitation > 0)
+  , [weather]);
 
   return (
     <View style={styles.container}>
@@ -58,6 +62,12 @@ export default function App() {
               </StyledText>
             </View>
           </View>
+          { hasUpcomingPrecipitation && !isZoomingHourly && (
+            <StyledText>
+              There will be rain...
+              {weather.minutely.map(min => `${min.precipitation}`).join(",")}
+            </StyledText>
+          )}
           <Pressable
             onPress={toggleHourlyZoom}
             style={styles.forecastWrapper}
@@ -97,7 +107,7 @@ export default function App() {
             ))}
           </View>
         </>
-      ) : undefined }
+      ) : <ActivityIndicator size="large" style={{ flex: 1 }} /> }
       <StatusBar style="auto" />
     </View>
   );
