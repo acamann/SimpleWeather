@@ -1,8 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View, Pressable, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Pressable, ActivityIndicator, Image } from 'react-native';
 import { OneCallWeatherResponse } from './api/models';
-import { getCurrentWeather } from './api/OpenWeatherMap';
+import { getCurrentWeather, getCurrentWeatherMapSrc } from './api/OpenWeatherMap';
 import { colors } from './components/Colors';
 import StyledText from './components/StyledText';
 import WeatherCondition from './components/WeatherCondition';
@@ -63,10 +63,13 @@ export default function App() {
             </View>
           </View>
           { hasUpcomingPrecipitation && !isZoomingHourly && (
-            <StyledText>
-              There will be rain...
-              {weather.minutely.map(min => `${min.precipitation}`).join(",")}
-            </StyledText>
+            <View>
+              <StyledText>
+                There will be rain...
+                {weather.minutely.map(min => `${min.precipitation}`).join(",")}
+              </StyledText>
+              <Image source={{ uri: getCurrentWeatherMapSrc() }} style={styles.icon} />
+            </View>
           )}
           <Pressable
             onPress={toggleHourlyZoom}
