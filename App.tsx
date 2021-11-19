@@ -29,10 +29,6 @@ export default function App() {
     setIsZoomingHourly(isZooming => !isZooming);
   }
 
-  const dailyForecast = useMemo(() => 
-    !weather || isZoomingHourly ? [] : weather.daily.slice(0, 7)
-  , [weather, isZoomingHourly]);
-
   const hourlyForecast = useMemo(() => 
     weather?.hourly.slice(0, isZoomingHourly ? 20 : 10) ?? []
   , [weather, isZoomingHourly]);
@@ -93,22 +89,24 @@ export default function App() {
               </View>
             ))}
           </Pressable>
-          <View style={styles.forecastWrapper}>
-            {dailyForecast.map(day => (
-              <View style={styles.forecast} key={day.dt.toString()}>
-                <StyledText style={styles.forecastDateTime}>
-                  {formatDateFromUnix(day.dt)}
-                </StyledText>
-                <StyledText>
-                  &#8593; {formatTemp(day.temp.max)}
-                </StyledText>
-                <StyledText>
-                  &#8595; {formatTemp(day.temp.min)}
-                </StyledText>
-                <WeatherCondition weather={day.weather} />
-              </View>
-            ))}
-          </View>
+          {!isZoomingHourly ? (
+            <View style={styles.forecastWrapper}>
+              {weather?.daily.map(day => (
+                <View style={styles.forecast} key={day.dt.toString()}>
+                  <StyledText style={styles.forecastDateTime}>
+                    {formatDateFromUnix(day.dt)}
+                  </StyledText>
+                  <StyledText>
+                    &#8593; {formatTemp(day.temp.max)}
+                  </StyledText>
+                  <StyledText>
+                    &#8595; {formatTemp(day.temp.min)}
+                  </StyledText>
+                  <WeatherCondition weather={day.weather} />
+                </View>
+              ))}
+            </View>
+          ) : undefined}
         </>
       ) : <ActivityIndicator size="large" style={{ flex: 1 }} /> }
       <StatusBar style="auto" />
