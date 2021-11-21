@@ -6,7 +6,7 @@ export interface Weather {
   icon: string
 }
 
-interface CurrentWeather {
+export interface CurrentWeather {
   dt: Date,
   sunrise: Date,
   sunset: Date,
@@ -26,12 +26,12 @@ interface CurrentWeather {
   }
 }
 
-interface MinuteWeather {
+export interface MinuteWeather {
   dt: Date,
   precipitation: number
 }
 
-interface HourlyWeather {
+export interface HourlyWeather {
   dt: number,
   temp: number,
   feels_like: number,
@@ -49,7 +49,7 @@ interface HourlyWeather {
   rain?: { "1h": number }
 }
 
-interface DailyWeather {
+export interface DailyWeather {
   dt: number,
   sunrise: Date,
   sunset: Date,
