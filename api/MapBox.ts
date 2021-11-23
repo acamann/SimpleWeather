@@ -1,8 +1,8 @@
-import { REACT_APP_MAPBOX_ACCESS_TOKEN } from 'react-native-dotenv';
+import { MAPBOX_ACCESS_TOKEN } from 'react-native-dotenv';
 import { getTileFromCoordinates } from '../utils/map';
 import { MapData } from './models';
 
-const accessToken = REACT_APP_MAPBOX_ACCESS_TOKEN;
+const accessToken = MAPBOX_ACCESS_TOKEN;
 
 export const getHomeMapSrc = (mapData: MapData): string | undefined => {
   const { latitude, longitude, zoom } = mapData;
