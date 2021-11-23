@@ -7,7 +7,7 @@ module.exports = function(api) {
         "module:react-native-dotenv", {
           moduleName: "react-native-dotenv",
           path: ".env",
-          whitelist: ['OPEN_WEATHER_MAP_API_KEY'],
+          whitelist: ['OPEN_WEATHER_MAP_API_KEY', 'REACT_APP_MAPBOX_ACCESS_TOKEN'],
         }
       ]
     ],

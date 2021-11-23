@@ -27,7 +27,7 @@ export interface CurrentWeather {
 }
 
 export interface MinuteWeather {
-  dt: Date,
+  dt: number,
   precipitation: number
 }
 
