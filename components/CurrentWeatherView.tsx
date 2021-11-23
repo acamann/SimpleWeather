@@ -5,8 +5,8 @@ import { colors } from './Colors';
 import { CurrentWeather, MinuteWeather } from '../api/models';
 import WeatherIcon from './WeatherIcon';
 import { formatTemp, formatTimeFromUnix } from '../utils/common';
-import { getCurrentWeatherMapSrc } from '../api/OpenWeatherMap';
-import { getHomeMapSrc } from '../api/MapBox';
+import { homeCoordinates } from '../utils/map';
+import RadarMap from './RadarMap';
 
 interface CurrentWeatherViewProps {
   current: CurrentWeather;
@@ -69,9 +69,10 @@ const CurrentWeatherView: React.FC<CurrentWeatherViewProps> = (props: CurrentWea
               <StyledText style={{ fontWeight: '700'}}>
                 Radar
               </StyledText>
-              <Image
-                source={{ uri: getHomeMapSrc() }}
-                style={{ width: '90vw', height: '90vw', borderColor: colors.lighter, borderWidth: 1 }}
+              <RadarMap
+                longitude={homeCoordinates.longitude}
+                latitude={homeCoordinates.latitude}
+                zoom={9}
               />
             </View>
           </>

@@ -1,4 +1,4 @@
-import { OneCallWeatherResponse } from './models';
+import { MapData, OneCallWeatherResponse } from './models';
 import { OPEN_WEATHER_MAP_API_KEY } from 'react-native-dotenv';
 import { getTileFromCoordinates, homeCoordinates } from '../utils/map';
 
@@ -26,10 +26,16 @@ export const getCurrentWeather = (payload: GetCurrentWeatherPayload): Promise<vo
     });
 };
 
-export const getCurrentWeatherMapSrc = (): string | undefined => {
-  const layer = "precipitation_new";
-  const zoom = 10;
-  const { latitude, longitude } = homeCoordinates;
+export enum WeatherLayer {
+  Precipitation = "precipitation_new",
+  Clouds = "clouds_new",
+  Temperature = "temp_new",
+  Wind = "wind_new",
+  Pressure = "pressure_new"
+}
+
+export const getCurrentWeatherMapSrc = (layer: WeatherLayer, mapData: MapData): string | undefined => {
+  const { latitude, longitude, zoom } = mapData;
   const { x, y } = getTileFromCoordinates(longitude, latitude, zoom);
   return apiKey ? `https://tile.openweathermap.org/map/${layer}/${zoom}/${x}/${y}.png?appid=${apiKey}` : undefined;
 }

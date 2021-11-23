@@ -1,11 +1,11 @@
 import { REACT_APP_MAPBOX_ACCESS_TOKEN } from 'react-native-dotenv';
-import { homeCoordinates, getTileFromCoordinates } from '../utils/map';
+import { getTileFromCoordinates } from '../utils/map';
+import { MapData } from './models';
 
 const accessToken = REACT_APP_MAPBOX_ACCESS_TOKEN;
 
-export const getHomeMapSrc = (): string | undefined => {
-  const zoom = 10;
-  const { latitude, longitude } = homeCoordinates;
+export const getHomeMapSrc = (mapData: MapData): string | undefined => {
+  const { latitude, longitude, zoom } = mapData;
   const { x, y } = getTileFromCoordinates(longitude, latitude, zoom);
   return accessToken ? `https://api.mapbox.com/styles/v1/mapbox/light-v10/tiles/${zoom}/${x}/${y}?access_token=${accessToken}` : undefined;
 }
