@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, Alert } from 'react-native';
+import Geolocation from 'react-native-geolocation-service';
 import { OneCallWeatherResponse } from './api/models';
 import { getCurrentWeather } from './api/OpenWeatherMap';
 import { colors } from './components/Colors';
@@ -8,19 +9,47 @@ import CurrentWeatherView from './components/CurrentWeatherView';
 import DailyForecast from './components/DailyForecast';
 import HourlyForecast from './components/HourlyForecast';
 
+
 type Focus = "none" | "current" | "hourly";
 
 export default function App() {
+  const [location, setLocation] = useState<Geolocation.GeoPosition>();
   const [weather, setWeather] = useState<OneCallWeatherResponse>();
 
   const [focus, setFocus] = useState<Focus>("none");
 
   useEffect(() => {
-    getCurrentWeather({
-      onSuccess: (weather): void => setWeather(weather),
-      onFailure: (error): void => console.log(["It didn't work!", error]),
-    })
-  }, []);
+    Geolocation.getCurrentPosition(
+      (position) => {
+        setLocation(position);
+      },
+      (error) => {
+        Alert.alert(`Code ${error.code}`, error.message);
+        setLocation(undefined);
+      },
+      {
+        accuracy: {
+          android: 'high',
+          ios: 'best',
+        },
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 10000,
+        distanceFilter: 0,
+      },
+    );
+  }, [])
+
+  useEffect(() => {
+    if (location?.coords.latitude && location?.coords.longitude) {
+      getCurrentWeather({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        onSuccess: (weather): void => setWeather(weather),
+        onFailure: (error): void => Alert.alert("Failed to retrieve weather", JSON.stringify(error)),
+      });
+    }
+  }, [location]);
 
   return (
     <View style={styles.container}>

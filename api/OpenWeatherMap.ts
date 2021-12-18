@@ -5,13 +5,15 @@ import { getTileFromCoordinates, homeCoordinates } from '../utils/map';
 const apiKey = OPEN_WEATHER_MAP_API_KEY;
 
 interface GetCurrentWeatherPayload {
+  latitude: number;
+  longitude: number;
   onSuccess: (weather: OneCallWeatherResponse) => void;
   onFailure: (error: any) => void;
 }
 
 export const getCurrentWeather = (payload: GetCurrentWeatherPayload): Promise<void> => {
   const exclude = 'alerts';
-  const { latitude, longitude } = homeCoordinates;
+  const { latitude, longitude } = payload;
   if (!apiKey) {
     payload.onFailure("API Key not set");
     return Promise.reject();
