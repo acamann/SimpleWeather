@@ -32,7 +32,7 @@ const HourlyForecast: React.FC<HourlyForecastProps> = (props: HourlyForecastProp
           <StyledText>
             {formatTemp(hour.temp)}
           </StyledText>
-          <StyledText style={{ width: 30 }}>
+          <StyledText style={{ width: 40 }}>
             {hour.pop > 0 ? formatPercent(hour.pop) : undefined}
           </StyledText>
           <StyledText style={{ width: 30 }}>
