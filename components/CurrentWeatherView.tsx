@@ -49,13 +49,13 @@ const CurrentWeatherView: React.FC<CurrentWeatherViewProps> = (props: CurrentWea
           <>
             <View>
               <StyledText style={{ fontWeight: '700'}}>
-                Next Hour Rainfall: {sum(precepitationForEachMinuteInMillimeters)}mm
+                Next Hour Rainfall: {Math.round(sum(precepitationForEachMinuteInMillimeters))}mm
               </StyledText>
               <View style={{ display: 'flex', flexDirection: 'row', width: '100%', minHeight: 30, alignItems: 'flex-end' }}>
                 {minutely.map(minute => 
                   <View key={minute.dt} style={{
                     width: `${100 / 60}%`,
-                    height: minute.precipitation === 0 ? 1 : minute.precipitation * 100,
+                    height: minute.precipitation === 0 ? 1 : minute.precipitation * 10,
                     backgroundColor: colors.accent
                   }} ></View>
                 )}
