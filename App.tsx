@@ -9,6 +9,7 @@ import CurrentWeatherView from './components/CurrentWeatherView';
 import DailyForecast from './components/DailyForecast';
 import DailyForecastGraph from './components/DailyForecastGraph';
 import HourlyForecast from './components/HourlyForecast';
+import HourlyForecastGraph from './components/HourlyForecastGraph';
 
 
 type Focus = "none" | "current" | "hourly" | "daily";
@@ -63,11 +64,9 @@ export default function App() {
             minutely={weather.minutely}
             onPress={(): void => setFocus("current")}
           />
-          <HourlyForecast
-            hourly={weather.hourly}
-            hoursToShow={8}
-            onPress={(): void => setFocus("hourly")}
-          />
+          <Pressable onPress={(): void => setFocus("hourly")} style={{ width: "100%" }}>
+            <HourlyForecastGraph hourly={weather.hourly} />
+          </Pressable>
           <Pressable onPress={(): void => setFocus("daily")} style={{ width: "100%" }}>
             <DailyForecastGraph daily={weather.daily} />
           </Pressable>
