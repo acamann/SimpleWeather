@@ -1,11 +1,12 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { DailyWeather } from '../api/models';
+import { DailyWeather, Weather } from '../api/models';
 import * as d3scale from "d3-scale";
 import * as d3shape from "d3-shape";
 import Svg, { G, Path } from "react-native-svg";
 import { colors } from './Colors';
 import StyledText from './StyledText';
+import WeatherIcon from './WeatherIcon';
 
 interface DailyForecastProps {
   daily: DailyWeather[];
@@ -15,32 +16,33 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
   const daily = props.daily;
 
   const [line, setLine] = React.useState<string | null>(null);
+  const [days, setDays] = React.useState<{ x: number, label: string, weather: Weather[] }[]>([]);
   const [width, setWidth] = React.useState<number>(0);
   const height = 80;
 
-  const forecastData = daily.flatMap(day => {
-    const dayDate = new Date(day.dt * 1000);
-    return [
-      {
-        date: new Date(dayDate.setHours(5)),
-        value: day.temp.morn,
-      },
-      {
-        date: new Date(dayDate.setHours(11)),
-        value: day.temp.day,
-      },
-      {
-        date: new Date(dayDate.setHours(17)),
-        value: day.temp.eve,
-      },
-      {
-        date: new Date(dayDate.setHours(23)),
-        value: day.temp.night,
-      }
-    ];
-  });
-
   React.useEffect(() => {
+    const forecastData = daily.flatMap(day => {
+      const dayDate = new Date(day.dt * 1000);
+      return [
+        {
+          date: new Date(dayDate.setHours(5)),
+          value: day.temp.morn,
+        },
+        {
+          date: new Date(dayDate.setHours(11)),
+          value: day.temp.day,
+        },
+        {
+          date: new Date(dayDate.setHours(17)),
+          value: day.temp.eve,
+        },
+        {
+          date: new Date(dayDate.setHours(23)),
+          value: day.temp.night,
+        }
+      ];
+    });
+
     const scaleX = d3scale.scaleTime()
       .domain([forecastData[0].date, forecastData[forecastData.length - 1].date])
       .range([0, width]);
@@ -55,20 +57,39 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
         (d: { date: Date, value: number }) => scaleY(d.value))
       .curve(d3shape.curveBumpX)
       (forecastData));
-  }, [forecastData]);
+
+    setDays(daily.map(day => {
+      const date = new Date(day.dt * 1000);
+      return {
+        x: scaleX(date),
+        label: date.toLocaleDateString("en-US", { weekday: 'short' })[0],
+        weather: day.weather
+      }
+    }));
+  }, [width]);
 
   return (
     <View style={styles.wrapper} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
       <StyledText style={{ fontWeight: '700' }}>
         This Week
       </StyledText>
-      { (width > 0) ? (
-        <Svg width={width} height={height}>
+      <Svg width={width} height={height}>
+        { width > 0 ? (
           <G x={0} y={0}>
             { line ? <Path d={line} stroke={colors.light} fill="none" /> : undefined }
           </G>
-        </Svg>
-      ) : undefined}
+        ) : undefined}
+      </Svg>
+      <View style={{ position: "relative", height: 40 }}>
+        {days.map((day, index) => (
+          <View key={index} style={{ position: "absolute", left: day.x - 12, width: 24 }}>
+            <StyledText style={{ fontSize: 12, textAlign: "center" }}>
+              {day.label}
+            </StyledText>
+            <WeatherIcon conditionId={day.weather[0].id} style={{ width: 24, height: 24 }} />
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
