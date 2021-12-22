@@ -15,7 +15,7 @@ const DailyForecast: React.FC<DailyForecastProps> = (props: DailyForecastProps) 
   return (
     <View style={styles.wrapper}>
       <StyledText style={{ fontWeight: '700' }}>
-        Daily
+        Daily Forecast
       </StyledText>
       {daily.map(day => (
         <View style={styles.forecast} key={day.dt.toString()}>

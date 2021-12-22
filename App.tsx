@@ -1,16 +1,17 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, ActivityIndicator, Alert } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, Alert, Pressable } from 'react-native';
 import Geolocation from 'react-native-geolocation-service';
 import { OneCallWeatherResponse } from './api/models';
 import { getCurrentWeather } from './api/OpenWeatherMap';
 import { colors } from './components/Colors';
 import CurrentWeatherView from './components/CurrentWeatherView';
 import DailyForecast from './components/DailyForecast';
+import DailyForecastGraph from './components/DailyForecastGraph';
 import HourlyForecast from './components/HourlyForecast';
 
 
-type Focus = "none" | "current" | "hourly";
+type Focus = "none" | "current" | "hourly" | "daily";
 
 export default function App() {
   const [location, setLocation] = useState<Geolocation.GeoPosition>();
@@ -67,7 +68,9 @@ export default function App() {
             hoursToShow={8}
             onPress={(): void => setFocus("hourly")}
           />
-          <DailyForecast daily={weather.daily} />
+          <Pressable onPress={(): void => setFocus("daily")} style={{ width: "100%" }}>
+            <DailyForecastGraph daily={weather.daily} />
+          </Pressable>
         </>
       ) : focus === "current" ? (
         <>
@@ -84,6 +87,10 @@ export default function App() {
           hoursToShow={24}
           onPress={(): void => setFocus("none")}
         />
+      ) : focus === "daily" ? (
+        <Pressable onPress={(): void => setFocus("none")} style={{ width: "100%" }}>
+          <DailyForecast daily={weather.daily} />
+        </Pressable>
       ) : undefined }
       <StatusBar style="auto" />
     </View>
