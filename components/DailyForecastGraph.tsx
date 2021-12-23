@@ -68,20 +68,23 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
       }
     }));
 
-    setLabels(daily.flatMap(day => {
+    setLabels(daily.flatMap((day, index) => {
       const date = new Date(day.dt * 1000);
-      return [
+      const labels = [
         {
           x: scaleX(new Date(date.setHours(11))),
           y: scaleY(day.temp.max),
           text: `${Math.round(day.temp.max)}`
-        },
-        {
+        }
+      ];
+      if (index > 0) {
+        labels.push({
           x: scaleX(new Date(date.setHours(0))),
           y: scaleY(day.temp.min) + 10,
           text: `${Math.round(day.temp.min)}`
-        }
-      ]
+        })
+      }
+      return labels;
     }));
   }, [width]);
 
