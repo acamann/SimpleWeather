@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { DailyWeather, Weather } from '../api/models';
 import * as d3scale from "d3-scale";
 import * as d3shape from "d3-shape";
-import Svg, { G, Path } from "react-native-svg";
+import Svg, { G, Path, Text } from "react-native-svg";
 import { colors } from './Colors';
 import StyledText from './StyledText';
 import WeatherIcon from './WeatherIcon';
@@ -17,6 +17,7 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
 
   const [line, setLine] = React.useState<string | null>(null);
   const [days, setDays] = React.useState<{ x: number, label: string, weather: Weather[] }[]>([]);
+  const [labels, setLabels] = React.useState<{ x: number, y: number, text: string }[]>([]);
   const [width, setWidth] = React.useState<number>(0);
   const height = 80;
 
@@ -66,6 +67,22 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
         weather: day.weather
       }
     }));
+
+    setLabels(daily.flatMap(day => {
+      const date = new Date(day.dt * 1000);
+      return [
+        {
+          x: scaleX(new Date(date.setHours(11))),
+          y: scaleY(day.temp.max),
+          text: `${Math.round(day.temp.max)}`
+        },
+        {
+          x: scaleX(new Date(date.setHours(0))),
+          y: scaleY(day.temp.min) + 10,
+          text: `${Math.round(day.temp.min)}`
+        }
+      ]
+    }));
   }, [width]);
 
   return (
@@ -73,10 +90,27 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
       <StyledText style={{ fontWeight: '700' }}>
         This Week
       </StyledText>
-      <Svg width={width} height={height}>
+      <Svg width={width} height={height} style={{ overflow: "visible" }}>
         { width > 0 ? (
           <G x={0} y={0}>
-            { line ? <Path d={line} stroke={colors.light} fill="none" /> : undefined }
+            { line ? (
+              <Path
+                d={line}
+                stroke={colors.light}
+                fill="none"
+              />
+            ) : undefined }
+            { labels.map((label, index) => (
+              <Text
+                key={index}
+                x={label.x}
+                y={label.y}
+                fontSize={10}
+                textAnchor="middle"
+              >
+                {label.text}
+              </Text>
+            ))}
           </G>
         ) : undefined}
       </Svg>

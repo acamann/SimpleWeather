@@ -3,7 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { HourlyWeather, Weather } from '../api/models';
 import * as d3scale from "d3-scale";
 import * as d3shape from "d3-shape";
-import Svg, { G, Path } from "react-native-svg";
+import Svg, { G, Path, Text } from "react-native-svg";
 import { colors } from './Colors';
 import StyledText from './StyledText';
 import WeatherIcon from './WeatherIcon';
@@ -17,6 +17,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
 
   const [line, setLine] = React.useState<string | null>(null);
   const [hours, setHours] = React.useState<{ x: number, label?: string, weather?: Weather }[]>([]);
+  const [labels, setLabels] = React.useState<{ x: number, y: number, text: string }[]>([]);
   const [width, setWidth] = React.useState<number>(0);
   const height = 80;
 
@@ -30,9 +31,11 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
       .domain([forecastData[0].date, forecastData[forecastData.length - 1].date])
       .range([0, width]);
 
-    const temperatures = forecastData.map(t => t.value);
+    const forecastSortedDesc = [...forecastData].sort((a, b) => b.value - a.value);
+    const low = forecastSortedDesc[forecastSortedDesc.length - 1];
+    const high = forecastSortedDesc[0];
     const scaleY = d3scale.scaleLinear()
-      .domain([Math.min(...temperatures), Math.max(...temperatures)])
+      .domain([low.value, high.value])
       .range([height, 0]);
 
     setLine(d3shape.line(
@@ -42,7 +45,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
       (forecastData));
 
     setHours(hourly.map((hour, index, allHours) => {
-      const previous = index > 0 ? allHours[index - 1] : undefined;
+      //const previous = index > 0 ? allHours[index - 1] : undefined;
       const hourDate = new Date(hour.dt * 1000);
       return {
         x: scaleX(hourDate),
@@ -50,6 +53,19 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
         weather: index % 3 === 1 ? hour.weather[0] : undefined // or hour.weather[0].id !== previous?.weather[0].id
       }
     }));
+
+    setLabels([
+      {
+        x: scaleX(high.date),
+        y: scaleY(high.value) + 12,
+        text: `${Math.round(high.value)}`
+      },
+      {
+        x: scaleX(low.date),
+        y: scaleY(low.value) - 8,
+        text: `${Math.round(low.value)}`
+      }
+    ]);
   }, [width]);
 
   return (
@@ -57,10 +73,27 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
       <StyledText style={{ fontWeight: '700' }}>
         Today
       </StyledText>
-      <Svg width={width} height={height}>
+      <Svg width={width} height={height} style={{ overflow: "visible" }}>
         { width > 0 ? (
           <G x={0} y={0}>
-            { line ? <Path d={line} stroke={colors.light} fill="none" /> : undefined }
+            { line ? (
+              <Path
+                d={line}
+                stroke={colors.light}
+                fill="none"
+              />
+             ) : undefined }
+            { labels.map((label, index) => (
+              <Text
+                key={index}
+                x={label.x}
+                y={label.y}
+                fontSize={12}
+                textAnchor="middle"
+              >
+                {label.text}
+              </Text>
+            ))}
           </G>
         ) : undefined}
       </Svg>
