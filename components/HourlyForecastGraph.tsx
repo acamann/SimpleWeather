@@ -15,7 +15,7 @@ interface HourlyForecastGraphProps {
 const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyForecastGraphProps) => {
   const hourly = props.hourly.slice(0, 24);
 
-  const [line, setLine] = React.useState<string | null>(null);
+  const [temperaturePath, setTemperaturePath] = React.useState<string | null>(null);
   const [hours, setHours] = React.useState<{ x: number, label?: string, weather?: Weather }[]>([]);
   const [labels, setLabels] = React.useState<{ x: number, y: number, text: string }[]>([]);
   const [width, setWidth] = React.useState<number>(0);
@@ -38,7 +38,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
       .domain([low.value, high.value])
       .range([height, 0]);
 
-    setLine(d3shape.line(
+    setTemperaturePath(d3shape.line(
         (d: { date: Date, value: number }) => scaleX(d.date),
         (d: { date: Date, value: number }) => scaleY(d.value))
       .curve(d3shape.curveBumpX)
@@ -76,9 +76,9 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
       <Svg width={width} height={height} style={{ overflow: "visible" }}>
         { width > 0 ? (
           <G x={0} y={0}>
-            { line ? (
+            { temperaturePath ? (
               <Path
-                d={line}
+                d={temperaturePath}
                 stroke={colors.light}
                 fill="none"
               />
