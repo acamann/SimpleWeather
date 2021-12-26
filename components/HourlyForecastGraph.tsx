@@ -57,12 +57,12 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
     setLabels([
       {
         x: scaleX(high.date),
-        y: scaleY(high.value) + 12,
+        y: scaleY(high.value) + 10,
         text: `${Math.round(high.value)}`
       },
       {
         x: scaleX(low.date),
-        y: scaleY(low.value) - 8,
+        y: scaleY(low.value) + 10,
         text: `${Math.round(low.value)}`
       }
     ]);
@@ -73,7 +73,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
       <StyledText style={{ fontWeight: '700' }}>
         Today
       </StyledText>
-      <Svg width={width} height={height} style={{ overflow: "visible" }}>
+      <Svg width={width} height={height} style={{ overflow: "visible", marginVertical: "24px" }}>
         { width > 0 ? (
           <G x={0} y={0}>
             { temperaturePath ? (
@@ -88,8 +88,10 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
                 key={index}
                 x={label.x}
                 y={label.y}
-                fontSize={12}
+                fontSize={10}
                 textAnchor="middle"
+                fontFamily="Roboto, Helvetica, Arial, sans-serif"
+                fill={colors.dark}
               >
                 {label.text}
               </Text>

@@ -14,6 +14,7 @@ export default StyledText;
 
 const styles = StyleSheet.create({
   text: {
+    fontFamily: "Roboto, Helvetica, Arial, sans-serif",
     color: colors.dark,
   }
 });

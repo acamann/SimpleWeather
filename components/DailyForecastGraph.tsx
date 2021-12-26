@@ -73,13 +73,13 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
       const labels = [
         {
           x: scaleX(new Date(date.setHours(11))),
-          y: scaleY(day.temp.max),
+          y: scaleY(day.temp.max) + 10,
           text: `${Math.round(day.temp.max)}`
         }
       ];
       if (index > 0) {
         labels.push({
-          x: scaleX(new Date(date.setHours(0))),
+          x: scaleX(new Date(date.setHours(6))),
           y: scaleY(day.temp.min) + 10,
           text: `${Math.round(day.temp.min)}`
         })
@@ -93,7 +93,7 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
       <StyledText style={{ fontWeight: '700' }}>
         This Week
       </StyledText>
-      <Svg width={width} height={height} style={{ overflow: "visible" }}>
+      <Svg width={width} height={height} style={{ overflow: "visible", marginVertical: "24px" }}>
         { width > 0 ? (
           <G x={0} y={0}>
             { line ? (
@@ -110,6 +110,8 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
                 y={label.y}
                 fontSize={10}
                 textAnchor="middle"
+                fontFamily="Roboto, Helvetica, Arial, sans-serif"
+                fill={colors.dark}
               >
                 {label.text}
               </Text>
