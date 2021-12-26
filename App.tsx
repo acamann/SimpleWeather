@@ -4,6 +4,7 @@ import { StyleSheet, View, ActivityIndicator, Alert, Pressable } from 'react-nat
 import Geolocation from 'react-native-geolocation-service';
 import { OneCallWeatherResponse } from './api/models';
 import { getCurrentWeather } from './api/OpenWeatherMap';
+import { getNearestCity } from './api/ReverseGeocoding';
 import { colors } from './components/Colors';
 import CurrentWeatherView from './components/CurrentWeatherView';
 import DailyForecast from './components/DailyForecast';
@@ -17,6 +18,7 @@ type Focus = "none" | "current" | "hourly" | "daily";
 export default function App() {
   const [location, setLocation] = useState<Geolocation.GeoPosition>();
   const [weather, setWeather] = useState<OneCallWeatherResponse>();
+  const [nearestCity, setNearestCity] = useState<string>();
 
   const [focus, setFocus] = useState<Focus>("none");
 
@@ -50,6 +52,11 @@ export default function App() {
         onSuccess: (weather): void => setWeather(weather),
         onFailure: (error): void => Alert.alert("Failed to retrieve weather", JSON.stringify(error)),
       });
+      getNearestCity({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        setCity: (city): void => setNearestCity(city)
+      });
     }
   }, [location]);
 
@@ -62,6 +69,7 @@ export default function App() {
           <CurrentWeatherView
             current={weather.current}
             minutely={weather.minutely}
+            nearestCity={nearestCity}
             onPress={(): void => setFocus("current")}
           />
           <Pressable onPress={(): void => setFocus("hourly")} style={{ width: "100%" }}>
@@ -76,6 +84,7 @@ export default function App() {
           <CurrentWeatherView
             current={weather.current}
             minutely={weather.minutely}
+            nearestCity={nearestCity}
             onPress={(): void => setFocus("none")}
             fullScreenDetails
           />

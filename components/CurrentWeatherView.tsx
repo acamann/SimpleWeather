@@ -11,6 +11,7 @@ import RadarMap from './RadarMap';
 interface CurrentWeatherViewProps {
   current: CurrentWeather;
   minutely: MinuteWeather[];
+  nearestCity?: string;
   onPress: ((event: GestureResponderEvent) => void) | null | undefined;
   fullScreenDetails?: boolean;
 }
@@ -20,6 +21,7 @@ const sum = (arr: number[]) => arr.reduce((partial_sum, current) => partial_sum 
 const CurrentWeatherView: React.FC<CurrentWeatherViewProps> = (props: CurrentWeatherViewProps) => {
   const current = props.current;
   const minutely = props.minutely;
+  const nearestCity = props.nearestCity;
   const onPress = props.onPress;
   const fullScreenDetails = props.fullScreenDetails ?? false;
 
@@ -42,6 +44,9 @@ const CurrentWeatherView: React.FC<CurrentWeatherViewProps> = (props: CurrentWea
                 `${current.weather[0].description}, `
               ) : undefined}
               feels like {formatTemp(current.feels_like)}
+            </StyledText>
+            <StyledText>
+              {nearestCity}
             </StyledText>
           </View>
         </View>
