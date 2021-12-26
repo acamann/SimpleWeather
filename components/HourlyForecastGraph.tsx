@@ -7,65 +7,121 @@ import Svg, { G, Path, Text } from "react-native-svg";
 import { colors } from './Colors';
 import StyledText from './StyledText';
 import WeatherIcon from './WeatherIcon';
+import { formatPercent, formatTemp } from '../utils/common';
 
 interface HourlyForecastGraphProps {
   hourly: HourlyWeather[];
+}
+
+interface ForecastData {
+  date: Date;
+  feels_like: number;
+  pop: number;
+  rain: number;
+}
+
+interface Label {
+  x: number;
+  y: number;
+  text: string;
 }
 
 const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyForecastGraphProps) => {
   const hourly = props.hourly.slice(0, 24);
 
   const [temperaturePath, setTemperaturePath] = React.useState<string | null>(null);
+  const [popPath, setPopPath] = React.useState<string | null>(null);
   const [hours, setHours] = React.useState<{ x: number, label?: string, weather?: Weather }[]>([]);
-  const [labels, setLabels] = React.useState<{ x: number, y: number, text: string }[]>([]);
+  const [tempLabels, setTempLabels] = React.useState<Label[]>([]);
+  const [popLabels, setPopLabels] = React.useState<Label[]>([]);
   const [width, setWidth] = React.useState<number>(0);
-  const height = 80;
+  const height = 100;
 
   React.useEffect(() => {
-    const forecastData = hourly.map(hour => ({
+    const forecastData: ForecastData[] = hourly.map(hour => ({
       date: new Date(hour.dt * 1000),
-      value: hour.feels_like
+      feels_like: hour.feels_like,
+      pop: hour.pop,
+      rain: hour.rain?.['1h'] ?? 0
     }));
 
-    const scaleX = d3scale.scaleTime()
+    const scaleDate = d3scale.scaleTime()
       .domain([forecastData[0].date, forecastData[forecastData.length - 1].date])
       .range([0, width]);
 
-    const forecastSortedDesc = [...forecastData].sort((a, b) => b.value - a.value);
+    const forecastSortedDesc = [...forecastData].sort((a, b) => b.feels_like - a.feels_like);
     const low = forecastSortedDesc[forecastSortedDesc.length - 1];
     const high = forecastSortedDesc[0];
-    const scaleY = d3scale.scaleLinear()
-      .domain([low.value, high.value])
+    const scaleTemps = d3scale.scaleLinear()
+      .domain([low.feels_like, high.feels_like])
       .range([height, 0]);
 
+    const scalePercentage = d3scale.scaleLinear().domain([0, 1]).range([height, 0]);
+
     setTemperaturePath(d3shape.line(
-        (d: { date: Date, value: number }) => scaleX(d.date),
-        (d: { date: Date, value: number }) => scaleY(d.value))
+        (d: ForecastData) => scaleDate(d.date),
+        (d: ForecastData) => scaleTemps(d.feels_like))
       .curve(d3shape.curveBumpX)
       (forecastData));
+
+    setPopPath(d3shape.line(
+      (d: ForecastData) => scaleDate(d.date),
+      (d: ForecastData) => scalePercentage(d.pop))
+      .curve(d3shape.curveBumpX)
+    ([
+      { date: forecastData[0].date, pop: 0, feels_like: 0, rain: 0 }, // start at 0 to fill area below percentage
+      ...forecastData,
+      { date: forecastData[forecastData.length - 1].date, pop: 0, feels_like: 0, rain: 0 } // end at 0 to fill area below percentage
+    ]));
 
     setHours(hourly.map((hour, index, allHours) => {
       //const previous = index > 0 ? allHours[index - 1] : undefined;
       const hourDate = new Date(hour.dt * 1000);
       return {
-        x: scaleX(hourDate),
+        x: scaleDate(hourDate),
         label: index % 3 === 1 ? hourDate.toLocaleTimeString("en-US", { hour: 'numeric' }) : undefined,
         weather: index % 3 === 1 ? hour.weather[0] : undefined // or hour.weather[0].id !== previous?.weather[0].id
       }
     }));
 
-    setLabels([
+    // Temperature Labels
+    setTempLabels([
       {
-        x: scaleX(high.date),
-        y: scaleY(high.value) + 10,
-        text: `${Math.round(high.value)}`
+        x: scaleDate(high.date),
+        y: scaleTemps(high.feels_like) + 10,
+        text: formatTemp(high.feels_like)
       },
       {
-        x: scaleX(low.date),
-        y: scaleY(low.value) + 10,
-        text: `${Math.round(low.value)}`
+        x: scaleDate(low.date),
+        y: scaleTemps(low.feels_like) + 10,
+        text: formatTemp(low.feels_like)
       }
     ]);
+
+    // Precipitation labels
+    const forecastSortedPrecip = [...forecastData].sort((a, b) => b.pop - a.pop);
+    const popLabels: Label[] = [];
+
+    const highPrecip = forecastSortedPrecip[0];
+    if (highPrecip.pop > 0) {
+      popLabels.push({
+        x: scaleDate(highPrecip.date),
+        y: scalePercentage(highPrecip.pop),
+        text: formatPercent(highPrecip.pop)
+      })
+    }
+
+    const lowPrecip = forecastSortedPrecip[forecastSortedPrecip.length - 1];
+    if (lowPrecip.pop > 0) {
+      popLabels.push({
+        x: scaleDate(lowPrecip.date),
+        y: scalePercentage(lowPrecip.pop),
+        text: formatPercent(lowPrecip.pop)
+      })
+    }
+
+    setPopLabels(popLabels);
+
   }, [width]);
 
   return (
@@ -83,7 +139,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
                 fill="none"
               />
              ) : undefined }
-            { labels.map((label, index) => (
+            { tempLabels.map((label, index) => (
               <Text
                 key={index}
                 x={label.x}
@@ -96,6 +152,28 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
                 {label.text}
               </Text>
             ))}
+            { (popPath && popLabels.length > 0) ? (
+              <Path
+                d={popPath}
+                stroke="#2f6690"
+                fill="#3a7ca5"
+                fillOpacity={0.1}
+                strokeOpacity={0.5}
+              />
+             ) : undefined }
+             { popLabels.map((label, index) => (
+              <Text
+                key={index}
+                x={label.x}
+                y={label.y}
+                fontSize={10}
+                textAnchor="middle"
+                fontFamily="Roboto, Helvetica, Arial, sans-serif"
+                fill="#2f6690"
+              >
+                {label.text}
+              </Text>
+             ))}
           </G>
         ) : undefined}
       </Svg>
