@@ -7,7 +7,7 @@ import Svg, { G, Path, Text } from "react-native-svg";
 import { colors } from './Colors';
 import StyledText from './StyledText';
 import WeatherIcon from './WeatherIcon';
-import { formatPercent, formatTemp } from '../utils/common';
+import { formatPercent, formatTemp, formatTime } from '../utils/common';
 
 interface HourlyForecastGraphProps {
   hourly: HourlyWeather[];
@@ -79,7 +79,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
       const hourDate = new Date(hour.dt * 1000);
       return {
         x: scaleDate(hourDate),
-        label: index % 3 === 1 ? hourDate.toLocaleTimeString("en-US", { hour: 'numeric' }) : undefined,
+        label: index % 3 === 1 ? formatTime(hourDate) : undefined,
         weather: index % 3 === 1 ? hour.weather[0] : undefined // or hour.weather[0].id !== previous?.weather[0].id
       }
     }));
@@ -93,7 +93,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
       },
       {
         x: scaleDate(low.date),
-        y: scaleTemps(low.feels_like) + 10,
+        y: scaleTemps(low.feels_like) - 10,
         text: formatTemp(low.feels_like)
       }
     ]);
@@ -106,7 +106,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
     if (highPrecip.pop > 0) {
       popLabels.push({
         x: scaleDate(highPrecip.date),
-        y: scalePercentage(highPrecip.pop),
+        y: scalePercentage(highPrecip.pop) + 10,
         text: formatPercent(highPrecip.pop)
       })
     }
@@ -115,7 +115,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
     if (lowPrecip.pop > 0) {
       popLabels.push({
         x: scaleDate(lowPrecip.date),
-        y: scalePercentage(lowPrecip.pop),
+        y: scalePercentage(lowPrecip.pop) - 10,
         text: formatPercent(lowPrecip.pop)
       })
     }
@@ -129,7 +129,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
       <StyledText style={{ fontWeight: '700' }}>
         Today
       </StyledText>
-      <Svg width={width} height={height} style={{ overflow: "visible", marginVertical: "24px" }}>
+      <Svg width={width} height={height} style={{ overflow: "visible", marginVertical: 24 }}>
         { width > 0 ? (
           <G x={0} y={0}>
             { temperaturePath ? (
@@ -146,7 +146,6 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
                 y={label.y}
                 fontSize={10}
                 textAnchor="middle"
-                fontFamily="Roboto, Helvetica, Arial, sans-serif"
                 fill={colors.dark}
               >
                 {label.text}
@@ -168,7 +167,6 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
                 y={label.y}
                 fontSize={10}
                 textAnchor="middle"
-                fontFamily="Roboto, Helvetica, Arial, sans-serif"
                 fill="#2f6690"
               >
                 {label.text}

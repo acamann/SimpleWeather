@@ -4,6 +4,7 @@ import { getHomeMapSrc } from '../api/MapBox';
 import { MapData } from '../api/models';
 import { getCurrentWeatherMapSrc, WeatherLayer } from '../api/OpenWeatherMap';
 import { colors } from './Colors';
+import { Dimensions } from 'react-native';
 
 const RadarMap: React.FC<MapData> = ({ latitude, longitude, zoom }) => {
   return (
@@ -28,8 +29,8 @@ export default RadarMap;
 
 const styles = StyleSheet.create({
   wrapper: {
-    width: '90vw',
-    height: '90vw',
+    width: 0.9 * Dimensions.get('window').width,
+    height: 0.9 * Dimensions.get('window').width,
     borderColor: colors.lighter,
     borderWidth: 1,
     position: 'relative',

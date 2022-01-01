@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, GestureResponderEvent, Pressable, Image } from 'react-native';
+import { View, StyleSheet, GestureResponderEvent, Pressable } from 'react-native';
 import StyledText from "./StyledText";
 import { colors } from './Colors';
 import { CurrentWeather, MinuteWeather } from '../api/models';
@@ -28,7 +28,10 @@ const CurrentWeatherView: React.FC<CurrentWeatherViewProps> = (props: CurrentWea
   const precepitationForEachMinuteInMillimeters = minutely.map(m => m.precipitation);
 
   return (
-    <Pressable style={{ display: 'flex', justifyContent: 'space-between', flex: fullScreenDetails ? 1 : undefined, width: '100%' }} onPress={onPress}>
+    <Pressable
+      style={{ display: 'flex', justifyContent: 'space-between', flex: fullScreenDetails ? 1 : undefined, width: '100%' }}
+      onPress={onPress}
+    >
       <>
         <View style={styles.currentWeather}>
           <WeatherIcon

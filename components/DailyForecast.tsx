@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     alignItems: 'center',
     width: '100%',
-    gap: 16,
+    //gap: 16,
   },
   forecastDateTime: {
     flex: 1

@@ -1,7 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, ActivityIndicator, Alert, Pressable } from 'react-native';
-import Geolocation from 'react-native-geolocation-service';
 import { OneCallWeatherResponse } from './api/models';
 import { getCurrentWeather } from './api/OpenWeatherMap';
 import { getNearestCity } from './api/ReverseGeocoding';
@@ -10,39 +9,30 @@ import CurrentWeatherView from './components/CurrentWeatherView';
 import DailyForecast from './components/DailyForecast';
 import DailyForecastGraph from './components/DailyForecastGraph';
 import HourlyForecast from './components/HourlyForecast';
+import * as Location from 'expo-location';
 import HourlyForecastGraph from './components/HourlyForecastGraph';
-
 
 type Focus = "none" | "current" | "hourly" | "daily";
 
 export default function App() {
-  const [location, setLocation] = useState<Geolocation.GeoPosition>();
+  const [location, setLocation] = useState<Location.LocationObject>();
   const [weather, setWeather] = useState<OneCallWeatherResponse>();
   const [nearestCity, setNearestCity] = useState<string>();
 
   const [focus, setFocus] = useState<Focus>("none");
 
   useEffect(() => {
-    Geolocation.getCurrentPosition(
-      (position) => {
-        setLocation(position);
-      },
-      (error) => {
-        Alert.alert(`Code ${error.code}`, error.message);
-        setLocation(undefined);
-      },
-      {
-        accuracy: {
-          android: 'high',
-          ios: 'best',
-        },
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 10000,
-        distanceFilter: 0,
-      },
-    );
-  }, [])
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission to access location was denied');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location);
+    })();
+  }, []);
 
   useEffect(() => {
     if (location?.coords.latitude && location?.coords.longitude) {

@@ -7,6 +7,7 @@ import Svg, { G, Path, Text } from "react-native-svg";
 import { colors } from './Colors';
 import StyledText from './StyledText';
 import WeatherIcon from './WeatherIcon';
+import { getDayOfWeek } from '../utils/common';
 
 interface DailyForecastProps {
   daily: DailyWeather[];
@@ -63,7 +64,7 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
       const date = new Date(day.dt * 1000);
       return {
         x: scaleX(date),
-        label: date.toLocaleDateString("en-US", { weekday: 'short' })[0],
+        label: getDayOfWeek(date)[0],
         weather: day.weather
       }
     }));
@@ -93,7 +94,7 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
       <StyledText style={{ fontWeight: '700' }}>
         This Week
       </StyledText>
-      <Svg width={width} height={height} style={{ overflow: "visible", marginVertical: "24px" }}>
+      <Svg width={width} height={height} style={{ overflow: "visible", marginVertical: 24 }}>
         { width > 0 ? (
           <G x={0} y={0}>
             { line ? (
@@ -110,7 +111,6 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
                 y={label.y}
                 fontSize={10}
                 textAnchor="middle"
-                fontFamily="Roboto, Helvetica, Arial, sans-serif"
                 fill={colors.dark}
               >
                 {label.text}
