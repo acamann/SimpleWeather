@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Dimensions } from 'react-native';
 import { HourlyWeather, Weather } from '../api/models';
 import * as d3scale from "d3-scale";
 import * as d3shape from "d3-shape";
@@ -34,8 +34,8 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
   const [hours, setHours] = React.useState<{ x: number, label?: string, weather?: Weather }[]>([]);
   const [tempLabels, setTempLabels] = React.useState<Label[]>([]);
   const [popLabels, setPopLabels] = React.useState<Label[]>([]);
-  const [width, setWidth] = React.useState<number>(0);
-  const height = 100;
+  const width = Dimensions.get("window").width - 24;
+  const height = 140;
 
   React.useEffect(() => {
     const forecastData: ForecastData[] = hourly.map(hour => ({
@@ -47,16 +47,16 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
 
     const scaleDate = d3scale.scaleTime()
       .domain([forecastData[0].date, forecastData[forecastData.length - 1].date])
-      .range([0, width]);
+      .range([12, width - 24]);
 
     const forecastSortedDesc = [...forecastData].sort((a, b) => b.feels_like - a.feels_like);
     const low = forecastSortedDesc[forecastSortedDesc.length - 1];
     const high = forecastSortedDesc[0];
     const scaleTemps = d3scale.scaleLinear()
       .domain([low.feels_like, high.feels_like])
-      .range([height, 0]);
+      .range([height - 24, 12]);
 
-    const scalePercentage = d3scale.scaleLinear().domain([0, 1]).range([height, 0]);
+    const scalePercentage = d3scale.scaleLinear().domain([0, 1]).range([height - 24, 12]);
 
     setTemperaturePath(d3shape.line(
         (d: ForecastData) => scaleDate(d.date),
@@ -88,12 +88,12 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
     setTempLabels([
       {
         x: scaleDate(high.date),
-        y: scaleTemps(high.feels_like) + 10,
+        y: scaleTemps(high.feels_like) - 5,
         text: formatTemp(high.feels_like)
       },
       {
         x: scaleDate(low.date),
-        y: scaleTemps(low.feels_like) - 10,
+        y: scaleTemps(low.feels_like) + 10,
         text: formatTemp(low.feels_like)
       }
     ]);
@@ -106,7 +106,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
     if (highPrecip.pop > 0) {
       popLabels.push({
         x: scaleDate(highPrecip.date),
-        y: scalePercentage(highPrecip.pop) + 10,
+        y: scalePercentage(highPrecip.pop) - 5,
         text: formatPercent(highPrecip.pop)
       })
     }
@@ -122,58 +122,56 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
 
     setPopLabels(popLabels);
 
-  }, [width]);
+  }, []);
 
   return (
-    <View style={styles.wrapper} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
-      <StyledText style={{ fontWeight: '700' }}>
+    <View style={styles.wrapper}>
+      <StyledText style={{ fontWeight: '700', marginBottom: 16 }}>
         Today
       </StyledText>
-      <Svg width={width} height={height} style={{ overflow: "visible", marginVertical: 24 }}>
-        { width > 0 ? (
-          <G x={0} y={0}>
-            { temperaturePath ? (
-              <Path
-                d={temperaturePath}
-                stroke={colors.light}
-                fill="none"
-              />
-             ) : undefined }
-            { tempLabels.map((label, index) => (
-              <Text
-                key={index}
-                x={label.x}
-                y={label.y}
-                fontSize={10}
-                textAnchor="middle"
-                fill={colors.dark}
-              >
-                {label.text}
-              </Text>
+      <Svg width={width} height={height}>
+        <G x={0} y={0}>
+          { temperaturePath ? (
+            <Path
+              d={temperaturePath}
+              stroke={colors.light}
+              fill="none"
+            />
+            ) : undefined }
+          { tempLabels.map((label, index) => (
+            <Text
+              key={index}
+              x={label.x}
+              y={label.y}
+              fontSize={10}
+              textAnchor="middle"
+              fill={colors.dark}
+            >
+              {label.text}
+            </Text>
+          ))}
+          { (popPath && popLabels.length > 0) ? (
+            <Path
+              d={popPath}
+              stroke="#2f6690"
+              fill="#3a7ca5"
+              fillOpacity={0.1}
+              strokeOpacity={0.5}
+            />
+            ) : undefined }
+            { popLabels.map((label, index) => (
+            <Text
+              key={index}
+              x={label.x}
+              y={label.y}
+              fontSize={10}
+              textAnchor="middle"
+              fill="#2f6690"
+            >
+              {label.text}
+            </Text>
             ))}
-            { (popPath && popLabels.length > 0) ? (
-              <Path
-                d={popPath}
-                stroke="#2f6690"
-                fill="#3a7ca5"
-                fillOpacity={0.1}
-                strokeOpacity={0.5}
-              />
-             ) : undefined }
-             { popLabels.map((label, index) => (
-              <Text
-                key={index}
-                x={label.x}
-                y={label.y}
-                fontSize={10}
-                textAnchor="middle"
-                fill="#2f6690"
-              >
-                {label.text}
-              </Text>
-             ))}
-          </G>
-        ) : undefined}
+        </G>
       </Svg>
       <View style={{ position: "relative", height: 40 }}>
         {hours.map((hour, index) => (
