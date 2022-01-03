@@ -12,10 +12,7 @@ export const formatTimeFromUnix = (dt: number): string =>
 
 export const formatTime = (date: Date): string => {
   let hr = date.getHours();
-  if( hr > 12 ) {
-    hr -= 12;
-  }
-  return `${hr} ${hr > 12 ? "PM" : "AM"}`;
+  return `${(hr + 24) % 12 || 12} ${hr > 11 ? "PM" : "AM"}`;
 }
 
 export const formatPercent = (float: number): string =>

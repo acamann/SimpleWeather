@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, ActivityIndicator, Alert, Pressable } from 'react-native';
+import { StyleSheet, ActivityIndicator, Alert, Pressable, ScrollView, RefreshControl } from 'react-native';
 import { OneCallWeatherResponse } from './api/models';
 import { getCurrentWeather } from './api/OpenWeatherMap';
 import { getNearestCity } from './api/ReverseGeocoding';
@@ -15,43 +15,55 @@ import HourlyForecastGraph from './components/HourlyForecastGraph';
 type Focus = "none" | "current" | "hourly" | "daily";
 
 export default function App() {
-  const [location, setLocation] = useState<Location.LocationObject>();
   const [weather, setWeather] = useState<OneCallWeatherResponse>();
   const [nearestCity, setNearestCity] = useState<string>();
+  const [refreshing, setRefreshing] = React.useState(false);
 
   const [focus, setFocus] = useState<Focus>("none");
 
-  useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission to access location was denied');
-        return;
-      }
-
-      let location = await Location.getCurrentPositionAsync({});
-      setLocation(location);
-    })();
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    loadWeather();
   }, []);
 
-  useEffect(() => {
-    if (location?.coords.latitude && location?.coords.longitude) {
-      getCurrentWeather({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        onSuccess: (weather): void => setWeather(weather),
-        onFailure: (error): void => Alert.alert("Failed to retrieve weather", JSON.stringify(error)),
-      });
-      getNearestCity({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        setCity: (city): void => setNearestCity(city)
-      });
+  const loadWeather = async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission to access location was denied');
+      return;
     }
-  }, [location]);
+
+    let location = await Location.getCurrentPositionAsync({});
+    getCurrentWeather({
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+      onSuccess: (weather): void => {
+        setRefreshing(false);
+        setWeather(weather);
+      },
+      onFailure: (error): void => {
+        setRefreshing(false);
+        Alert.alert("Failed to retrieve weather", JSON.stringify(error));
+      },
+    });
+    getNearestCity({
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+      setCity: (city): void => setNearestCity(city)
+    });
+  }
+
+  useEffect(() => {
+    loadWeather();
+  }, []);
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      showsHorizontalScrollIndicator={false}
+      showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+    >
       { !weather ? (
         <ActivityIndicator size="large" style={{ flex: 1 }} />
       ) : focus === "none" ? (
@@ -91,7 +103,7 @@ export default function App() {
         </Pressable>
       ) : undefined }
       <StatusBar style="auto" />
-    </View>
+    </ScrollView>
   );
 }
 

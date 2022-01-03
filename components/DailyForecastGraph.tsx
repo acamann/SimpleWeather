@@ -84,7 +84,7 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
         }
       ];
     }));
-  }, []);
+  }, [daily]);
 
   return (
     <View style={styles.wrapper}>

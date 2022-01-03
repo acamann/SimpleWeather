@@ -16,6 +16,7 @@ interface HourlyForecastGraphProps {
 interface ForecastData {
   date: Date;
   feels_like: number;
+  temp: number;
   pop: number;
   rain: number;
 }
@@ -30,6 +31,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
   const hourly = props.hourly.slice(0, 24);
 
   const [temperaturePath, setTemperaturePath] = React.useState<string | null>(null);
+  const [feelsLikePath, setFeelsLikePath] = React.useState<string | null>(null);
   const [popPath, setPopPath] = React.useState<string | null>(null);
   const [hours, setHours] = React.useState<{ x: number, label?: string, weather?: Weather }[]>([]);
   const [tempLabels, setTempLabels] = React.useState<Label[]>([]);
@@ -41,6 +43,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
     const forecastData: ForecastData[] = hourly.map(hour => ({
       date: new Date(hour.dt * 1000),
       feels_like: hour.feels_like,
+      temp: hour.temp,
       pop: hour.pop,
       rain: hour.rain?.['1h'] ?? 0
     }));
@@ -49,16 +52,37 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
       .domain([forecastData[0].date, forecastData[forecastData.length - 1].date])
       .range([12, width - 24]);
 
-    const forecastSortedDesc = [...forecastData].sort((a, b) => b.feels_like - a.feels_like);
-    const low = forecastSortedDesc[forecastSortedDesc.length - 1];
-    const high = forecastSortedDesc[0];
+    
+    const feelsLikeDesc = [...forecastData].sort((a, b) => b.feels_like - a.feels_like);
+    const minFeelsLike = feelsLikeDesc[feelsLikeDesc.length - 1];
+    const maxFeelsLike = feelsLikeDesc[0];
+
+    const tempDesc = [...forecastData].sort((a, b) => b.temp - a.temp);
+    const minTemp = tempDesc[tempDesc.length - 1];
+    const maxTemp = tempDesc[0];
+
+    const low = {
+      date: minFeelsLike.feels_like < minTemp.temp ? minFeelsLike.date : minTemp.date,
+      degrees: minFeelsLike.feels_like < minTemp.temp ? minFeelsLike.feels_like : minTemp.temp
+    };
+    const high = {
+      date: maxFeelsLike.feels_like > maxTemp.temp ? maxFeelsLike.date : maxTemp.date,
+      degrees: maxFeelsLike.feels_like > maxTemp.temp ? maxFeelsLike.feels_like : maxTemp.temp
+    }
+
     const scaleTemps = d3scale.scaleLinear()
-      .domain([low.feels_like, high.feels_like])
+      .domain([low.degrees, high.degrees])
       .range([height - 24, 12]);
 
     const scalePercentage = d3scale.scaleLinear().domain([0, 1]).range([height - 24, 12]);
 
     setTemperaturePath(d3shape.line(
+        (d: ForecastData) => scaleDate(d.date),
+        (d: ForecastData) => scaleTemps(d.temp))
+      .curve(d3shape.curveBumpX)
+      (forecastData));
+
+    setFeelsLikePath(d3shape.line(
         (d: ForecastData) => scaleDate(d.date),
         (d: ForecastData) => scaleTemps(d.feels_like))
       .curve(d3shape.curveBumpX)
@@ -69,9 +93,9 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
       (d: ForecastData) => scalePercentage(d.pop))
       .curve(d3shape.curveBumpX)
     ([
-      { date: forecastData[0].date, pop: 0, feels_like: 0, rain: 0 }, // start at 0 to fill area below percentage
+      { date: forecastData[0].date, pop: 0, temp: 0, feels_like: 0, rain: 0 }, // start at 0 to fill area below percentage
       ...forecastData,
-      { date: forecastData[forecastData.length - 1].date, pop: 0, feels_like: 0, rain: 0 } // end at 0 to fill area below percentage
+      { date: forecastData[forecastData.length - 1].date, pop: 0, temp: 0, feels_like: 0, rain: 0 } // end at 0 to fill area below percentage
     ]));
 
     setHours(hourly.map((hour, index, allHours) => {
@@ -88,13 +112,13 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
     setTempLabels([
       {
         x: scaleDate(high.date),
-        y: scaleTemps(high.feels_like) - 5,
-        text: formatTemp(high.feels_like)
+        y: scaleTemps(high.degrees) - 5,
+        text: formatTemp(high.degrees)
       },
       {
         x: scaleDate(low.date),
-        y: scaleTemps(low.feels_like) + 10,
-        text: formatTemp(low.feels_like)
+        y: scaleTemps(low.degrees) + 10,
+        text: formatTemp(low.degrees)
       }
     ]);
 
@@ -121,8 +145,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
     }
 
     setPopLabels(popLabels);
-
-  }, []);
+  }, [hourly]);
 
   return (
     <View style={styles.wrapper}>
@@ -134,10 +157,10 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
           { temperaturePath ? (
             <Path
               d={temperaturePath}
-              stroke={colors.light}
+              stroke={colors.dark}
               fill="none"
             />
-            ) : undefined }
+          ) : undefined }
           { tempLabels.map((label, index) => (
             <Text
               key={index}
@@ -150,6 +173,13 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
               {label.text}
             </Text>
           ))}
+          { feelsLikePath ? (
+            <Path
+              d={feelsLikePath}
+              stroke={colors.lighter}
+              fill="none"
+            />
+            ) : undefined }
           { (popPath && popLabels.length > 0) ? (
             <Path
               d={popPath}
