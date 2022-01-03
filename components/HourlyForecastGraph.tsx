@@ -30,122 +30,111 @@ interface Label {
 const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyForecastGraphProps) => {
   const hourly = props.hourly.slice(0, 24);
 
-  const [temperaturePath, setTemperaturePath] = React.useState<string | null>(null);
-  const [feelsLikePath, setFeelsLikePath] = React.useState<string | null>(null);
-  const [popPath, setPopPath] = React.useState<string | null>(null);
-  const [hours, setHours] = React.useState<{ x: number, label?: string, weather?: Weather }[]>([]);
-  const [tempLabels, setTempLabels] = React.useState<Label[]>([]);
-  const [popLabels, setPopLabels] = React.useState<Label[]>([]);
   const width = Dimensions.get("window").width - 24;
   const height = 140;
 
-  React.useEffect(() => {
-    const forecastData: ForecastData[] = hourly.map(hour => ({
-      date: new Date(hour.dt * 1000),
-      feels_like: hour.feels_like,
-      temp: hour.temp,
-      pop: hour.pop,
-      rain: hour.rain?.['1h'] ?? 0
-    }));
+  const forecastData: ForecastData[] = hourly.map(hour => ({
+    date: new Date(hour.dt * 1000),
+    feels_like: hour.feels_like,
+    temp: hour.temp,
+    pop: hour.pop,
+    rain: hour.rain?.['1h'] ?? 0
+  }));
 
-    const scaleDate = d3scale.scaleTime()
-      .domain([forecastData[0].date, forecastData[forecastData.length - 1].date])
-      .range([12, width - 24]);
+  const scaleDate = d3scale.scaleTime()
+    .domain([forecastData[0].date, forecastData[forecastData.length - 1].date])
+    .range([12, width - 24]);
 
-    
-    const feelsLikeDesc = [...forecastData].sort((a, b) => b.feels_like - a.feels_like);
-    const minFeelsLike = feelsLikeDesc[feelsLikeDesc.length - 1];
-    const maxFeelsLike = feelsLikeDesc[0];
+  const feelsLikeDesc = [...forecastData].sort((a, b) => b.feels_like - a.feels_like);
+  const minFeelsLike = feelsLikeDesc[feelsLikeDesc.length - 1];
+  const maxFeelsLike = feelsLikeDesc[0];
 
-    const tempDesc = [...forecastData].sort((a, b) => b.temp - a.temp);
-    const minTemp = tempDesc[tempDesc.length - 1];
-    const maxTemp = tempDesc[0];
+  const tempDesc = [...forecastData].sort((a, b) => b.temp - a.temp);
+  const minTemp = tempDesc[tempDesc.length - 1];
+  const maxTemp = tempDesc[0];
 
-    const low = {
-      date: minFeelsLike.feels_like < minTemp.temp ? minFeelsLike.date : minTemp.date,
-      degrees: minFeelsLike.feels_like < minTemp.temp ? minFeelsLike.feels_like : minTemp.temp
-    };
-    const high = {
-      date: maxFeelsLike.feels_like > maxTemp.temp ? maxFeelsLike.date : maxTemp.date,
-      degrees: maxFeelsLike.feels_like > maxTemp.temp ? maxFeelsLike.feels_like : maxTemp.temp
-    }
+  const low = {
+    date: minFeelsLike.feels_like < minTemp.temp ? minFeelsLike.date : minTemp.date,
+    degrees: minFeelsLike.feels_like < minTemp.temp ? minFeelsLike.feels_like : minTemp.temp
+  };
+  const high = {
+    date: maxFeelsLike.feels_like > maxTemp.temp ? maxFeelsLike.date : maxTemp.date,
+    degrees: maxFeelsLike.feels_like > maxTemp.temp ? maxFeelsLike.feels_like : maxTemp.temp
+  }
 
-    const scaleTemps = d3scale.scaleLinear()
-      .domain([low.degrees, high.degrees])
-      .range([height - 24, 12]);
+  const scaleTemps = d3scale.scaleLinear()
+    .domain([low.degrees, high.degrees])
+    .range([height - 24, 12]);
 
-    const scalePercentage = d3scale.scaleLinear().domain([0, 1]).range([height - 24, 12]);
+  const scalePercentage = d3scale.scaleLinear().domain([0, 1]).range([height - 24, 12]);
 
-    setTemperaturePath(d3shape.line(
-        (d: ForecastData) => scaleDate(d.date),
-        (d: ForecastData) => scaleTemps(d.temp))
-      .curve(d3shape.curveBumpX)
-      (forecastData));
-
-    setFeelsLikePath(d3shape.line(
-        (d: ForecastData) => scaleDate(d.date),
-        (d: ForecastData) => scaleTemps(d.feels_like))
-      .curve(d3shape.curveBumpX)
-      (forecastData));
-
-    setPopPath(d3shape.line(
+  const temperaturePath = d3shape.line(
       (d: ForecastData) => scaleDate(d.date),
-      (d: ForecastData) => scalePercentage(d.pop))
-      .curve(d3shape.curveBumpX)
-    ([
-      { date: forecastData[0].date, pop: 0, temp: 0, feels_like: 0, rain: 0 }, // start at 0 to fill area below percentage
-      ...forecastData,
-      { date: forecastData[forecastData.length - 1].date, pop: 0, temp: 0, feels_like: 0, rain: 0 } // end at 0 to fill area below percentage
-    ]));
+      (d: ForecastData) => scaleTemps(d.temp))
+    .curve(d3shape.curveBumpX)
+    (forecastData);
 
-    setHours(hourly.map((hour, index, allHours) => {
-      //const previous = index > 0 ? allHours[index - 1] : undefined;
-      const hourDate = new Date(hour.dt * 1000);
-      return {
-        x: scaleDate(hourDate),
-        label: index % 3 === 1 ? formatTime(hourDate) : undefined,
-        weather: index % 3 === 1 ? hour.weather[0] : undefined // or hour.weather[0].id !== previous?.weather[0].id
-      }
-    }));
+  const feelsLikePath = d3shape.line(
+      (d: ForecastData) => scaleDate(d.date),
+      (d: ForecastData) => scaleTemps(d.feels_like))
+    .curve(d3shape.curveBumpX)
+    (forecastData);
 
-    // Temperature Labels
-    setTempLabels([
-      {
-        x: scaleDate(high.date),
-        y: scaleTemps(high.degrees) - 5,
-        text: formatTemp(high.degrees)
-      },
-      {
-        x: scaleDate(low.date),
-        y: scaleTemps(low.degrees) + 10,
-        text: formatTemp(low.degrees)
-      }
-    ]);
+  const popPath = d3shape.line(
+    (d: ForecastData) => scaleDate(d.date),
+    (d: ForecastData) => scalePercentage(d.pop))
+    .curve(d3shape.curveBumpX)
+  ([
+    { date: forecastData[0].date, pop: 0, temp: 0, feels_like: 0, rain: 0 }, // start at 0 to fill area below percentage
+    ...forecastData,
+    { date: forecastData[forecastData.length - 1].date, pop: 0, temp: 0, feels_like: 0, rain: 0 } // end at 0 to fill area below percentage
+  ]);
 
-    // Precipitation labels
-    const forecastSortedPrecip = [...forecastData].sort((a, b) => b.pop - a.pop);
-    const popLabels: Label[] = [];
-
-    const highPrecip = forecastSortedPrecip[0];
-    if (highPrecip.pop > 0) {
-      popLabels.push({
-        x: scaleDate(highPrecip.date),
-        y: scalePercentage(highPrecip.pop) - 5,
-        text: formatPercent(highPrecip.pop)
-      })
+  const hours = hourly.map((hour, index, allHours) => {
+    //const previous = index > 0 ? allHours[index - 1] : undefined;
+    const hourDate = new Date(hour.dt * 1000);
+    return {
+      x: scaleDate(hourDate),
+      label: index % 3 === 1 ? formatTime(hourDate) : undefined,
+      weather: index % 3 === 1 ? hour.weather[0] : undefined // or hour.weather[0].id !== previous?.weather[0].id
     }
+  });
 
-    const lowPrecip = forecastSortedPrecip[forecastSortedPrecip.length - 1];
-    if (lowPrecip.pop > 0) {
-      popLabels.push({
-        x: scaleDate(lowPrecip.date),
-        y: scalePercentage(lowPrecip.pop) - 10,
-        text: formatPercent(lowPrecip.pop)
-      })
+  // Temperature Labels
+  const tempLabels = [
+    {
+      x: scaleDate(high.date),
+      y: scaleTemps(high.degrees) - 5,
+      text: formatTemp(high.degrees)
+    },
+    {
+      x: scaleDate(low.date),
+      y: scaleTemps(low.degrees) + 10,
+      text: formatTemp(low.degrees)
     }
+  ];
 
-    setPopLabels(popLabels);
-  }, [hourly]);
+  // Precipitation labels
+  const forecastSortedPrecip = [...forecastData].sort((a, b) => b.pop - a.pop);
+  const popLabels: Label[] = [];
+
+  const highPrecip = forecastSortedPrecip[0];
+  if (highPrecip.pop > 0) {
+    popLabels.push({
+      x: scaleDate(highPrecip.date),
+      y: scalePercentage(highPrecip.pop) - 5,
+      text: formatPercent(highPrecip.pop)
+    })
+  }
+
+  const lowPrecip = forecastSortedPrecip[forecastSortedPrecip.length - 1];
+  if (lowPrecip.pop > 0) {
+    popLabels.push({
+      x: scaleDate(lowPrecip.date),
+      y: scalePercentage(lowPrecip.pop) - 10,
+      text: formatPercent(lowPrecip.pop)
+    })
+  }
 
   return (
     <View style={styles.wrapper}>

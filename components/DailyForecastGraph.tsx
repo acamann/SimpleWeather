@@ -16,75 +16,70 @@ interface DailyForecastProps {
 const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastProps) => {
   const daily = props.daily;
 
-  const [line, setLine] = React.useState<string | null>(null);
-  const [days, setDays] = React.useState<{ x: number, label: string, weather: Weather[] }[]>([]);
-  const [labels, setLabels] = React.useState<{ x: number, y: number, text: string }[]>([]);
   const width = Dimensions.get("window").width - 24;
   const height = 124;
 
-  React.useEffect(() => {
-    const forecastData = daily.flatMap(day => {
-      const dayDate = new Date(day.dt * 1000);
-      return [
-        {
-          date: new Date(dayDate.setHours(5)),
-          value: day.temp.morn,
-        },
-        {
-          date: new Date(dayDate.setHours(11)),
-          value: day.temp.day,
-        },
-        {
-          date: new Date(dayDate.setHours(17)),
-          value: day.temp.eve,
-        },
-        {
-          date: new Date(dayDate.setHours(23)),
-          value: day.temp.night,
-        }
-      ];
-    });
-
-    const scaleX = d3scale.scaleTime()
-      .domain([forecastData[0].date, forecastData[forecastData.length - 1].date])
-      .range([12, width - 24]);
-
-    const temperatures = forecastData.map(t => t.value);
-    const scaleY = d3scale.scaleLinear()
-      .domain([Math.min(...temperatures), Math.max(...temperatures)])
-      .range([height - 24, 12]);
-
-    setLine(d3shape.line(
-        (d: { date: Date, value: number }) => scaleX(d.date),
-        (d: { date: Date, value: number }) => scaleY(d.value))
-      .curve(d3shape.curveBumpX)
-      (forecastData));
-
-    setDays(daily.map(day => {
-      const date = new Date(day.dt * 1000);
-      return {
-        x: scaleX(date),
-        label: getDayOfWeek(date)[0],
-        weather: day.weather
+  const forecastData = daily.flatMap(day => {
+    const dayDate = new Date(day.dt * 1000);
+    return [
+      {
+        date: new Date(dayDate.setHours(5)),
+        value: day.temp.morn,
+      },
+      {
+        date: new Date(dayDate.setHours(11)),
+        value: day.temp.day,
+      },
+      {
+        date: new Date(dayDate.setHours(17)),
+        value: day.temp.eve,
+      },
+      {
+        date: new Date(dayDate.setHours(23)),
+        value: day.temp.night,
       }
-    }));
+    ];
+  });
 
-    setLabels(daily.flatMap((day, index) => {
-      const date = new Date(day.dt * 1000);
-      return [
-        {
-          x: scaleX(new Date(date.setHours(11))),
-          y: scaleY(day.temp.day) - 5,
-          text: `${Math.round(day.temp.day)}`
-        },
-        {
-          x: scaleX(new Date(date.setHours(23))),
-          y: scaleY(day.temp.night) + 10,
-          text: `${Math.round(day.temp.night)}`
-        }
-      ];
-    }));
-  }, [daily]);
+  const scaleX = d3scale.scaleTime()
+    .domain([forecastData[0].date, forecastData[forecastData.length - 1].date])
+    .range([12, width - 24]);
+
+  const temperatures = forecastData.map(t => t.value);
+  const scaleY = d3scale.scaleLinear()
+    .domain([Math.min(...temperatures), Math.max(...temperatures)])
+    .range([height - 24, 12]);
+
+  const line = d3shape.line(
+      (d: { date: Date, value: number }) => scaleX(d.date),
+      (d: { date: Date, value: number }) => scaleY(d.value))
+    .curve(d3shape.curveBumpX)
+    (forecastData);
+
+  const days = daily.map(day => {
+    const date = new Date(day.dt * 1000);
+    return {
+      x: scaleX(date),
+      label: getDayOfWeek(date)[0],
+      weather: day.weather
+    }
+  });
+
+  const labels = daily.flatMap((day, index) => {
+    const date = new Date(day.dt * 1000);
+    return [
+      {
+        x: scaleX(new Date(date.setHours(11))),
+        y: scaleY(day.temp.day) - 5,
+        text: `${Math.round(day.temp.day)}`
+      },
+      {
+        x: scaleX(new Date(date.setHours(23))),
+        y: scaleY(day.temp.night) + 10,
+        text: `${Math.round(day.temp.night)}`
+      }
+    ];
+  });
 
   return (
     <View style={styles.wrapper}>
