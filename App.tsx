@@ -4,7 +4,7 @@ import { StyleSheet, ActivityIndicator, Alert, Pressable, ScrollView, RefreshCon
 import { OneCallWeatherResponse } from './api/models';
 import { getCurrentWeather } from './api/OpenWeatherMap';
 import { getNearestCity } from './api/ReverseGeocoding';
-import { colors } from './components/Colors';
+import { useColorSchemePalette } from './components/Colors';
 import CurrentWeatherView from './components/CurrentWeatherView';
 import DailyForecast from './components/DailyForecast';
 import DailyForecastGraph from './components/DailyForecastGraph';
@@ -20,6 +20,19 @@ export default function App() {
   const [refreshing, setRefreshing] = React.useState(false);
 
   const [focus, setFocus] = useState<Focus>("none");
+
+  const { colors } = useColorSchemePalette();
+
+  const styles = StyleSheet.create({
+    container: {
+      padding: 16,
+      flex: 1,
+      backgroundColor: colors.back,
+      color: colors.onBackground,
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    }
+  });
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -106,14 +119,3 @@ export default function App() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    flex: 1,
-    backgroundColor: colors.back,
-    color: colors.dark,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  }
-});

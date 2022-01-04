@@ -4,7 +4,7 @@ import { HourlyWeather, Weather } from '../api/models';
 import * as d3scale from "d3-scale";
 import * as d3shape from "d3-shape";
 import Svg, { G, Path, Text } from "react-native-svg";
-import { colors } from './Colors';
+import { useColorSchemePalette } from './Colors';
 import StyledText from './StyledText';
 import WeatherIcon from './WeatherIcon';
 import { formatPercent, formatTemp, formatTime } from '../utils/common';
@@ -29,6 +29,8 @@ interface Label {
 
 const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyForecastGraphProps) => {
   const hourly = props.hourly.slice(0, 24);
+
+  const { colors } = useColorSchemePalette();
 
   const width = Dimensions.get("window").width - 24;
   const height = 140;
@@ -146,7 +148,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
           { temperaturePath ? (
             <Path
               d={temperaturePath}
-              stroke={colors.dark}
+              stroke={colors.onBackground}
               fill="none"
             />
           ) : undefined }
@@ -157,7 +159,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
               y={label.y}
               fontSize={10}
               textAnchor="middle"
-              fill={colors.dark}
+              fill={colors.onBackground}
             >
               {label.text}
             </Text>
@@ -165,7 +167,8 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
           { feelsLikePath ? (
             <Path
               d={feelsLikePath}
-              stroke={colors.lighter}
+              stroke={colors.onBackground}
+              opacity={0.2}
               fill="none"
             />
             ) : undefined }

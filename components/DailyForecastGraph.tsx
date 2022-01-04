@@ -4,7 +4,7 @@ import { DailyWeather, Weather } from '../api/models';
 import * as d3scale from "d3-scale";
 import * as d3shape from "d3-shape";
 import Svg, { G, Path, Text } from "react-native-svg";
-import { colors } from './Colors';
+import { useColorSchemePalette } from './Colors';
 import StyledText from './StyledText';
 import WeatherIcon from './WeatherIcon';
 import { getDayOfWeek } from '../utils/common';
@@ -15,6 +15,8 @@ interface DailyForecastProps {
 
 const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastProps) => {
   const daily = props.daily;
+
+  const { colors } = useColorSchemePalette();
 
   const width = Dimensions.get("window").width - 24;
   const height = 124;
@@ -91,7 +93,7 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
           { line ? (
             <Path
               d={line}
-              stroke={colors.light}
+              stroke={colors.onBackground}
               fill="none"
             />
           ) : undefined }
@@ -102,7 +104,7 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
               y={label.y}
               fontSize={10}
               textAnchor="middle"
-              fill={colors.dark}
+              fill={colors.onBackground}
             >
               {label.text}
             </Text>
