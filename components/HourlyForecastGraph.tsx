@@ -168,7 +168,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
             <Path
               d={feelsLikePath}
               stroke={colors.onBackground}
-              opacity={0.2}
+              opacity={0.4}
               fill="none"
             />
             ) : undefined }
