@@ -3,7 +3,7 @@ import { View, StyleSheet, Dimensions } from 'react-native';
 import { HourlyWeather, Weather } from '../api/models';
 import * as d3scale from "d3-scale";
 import * as d3shape from "d3-shape";
-import Svg, { G, Path, Text } from "react-native-svg";
+import Svg, { Defs, G, LinearGradient, Path, Stop, Text } from "react-native-svg";
 import { useColorSchemePalette } from './Colors';
 import StyledText from './StyledText';
 import WeatherIcon from './WeatherIcon';
@@ -32,7 +32,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
 
   const { colors } = useColorSchemePalette();
 
-  const width = Dimensions.get("window").width - 24;
+  const width = Dimensions.get("window").width - 16;
   const height = 180;
 
   const forecastData: ForecastData[] = hourly.map(hour => ({
@@ -45,7 +45,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
 
   const scaleDate = d3scale.scaleTime()
     .domain([forecastData[0].date, forecastData[forecastData.length - 1].date])
-    .range([12, width - 24]);
+    .range([12, width - 8]);
 
   const feelsLikeDesc = [...forecastData].sort((a, b) => b.feels_like - a.feels_like);
   const minFeelsLike = feelsLikeDesc[feelsLikeDesc.length - 1];
@@ -76,7 +76,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
 
   const scalePercentage = d3scale.scaleLinear()
     .domain([0, 1])
-    .range([height - 24, 12]);
+    .range([height, 12]);
 
   const temperaturePath = d3shape.line(
       (d: ForecastData) => scaleDate(d.date),
@@ -90,7 +90,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
     .curve(d3shape.curveBumpX)
     (forecastData);
 
-  const popPath = d3shape.line(
+  const popFillPath = d3shape.line(
     (d: ForecastData) => scaleDate(d.date),
     (d: ForecastData) => scalePercentage(d.pop))
     .curve(d3shape.curveBumpX)
@@ -99,6 +99,12 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
     ...forecastData,
     { date: forecastData[forecastData.length - 1].date, pop: 0, temp: 0, feels_like: 0, rain: 0 } // end at 0 to fill area below percentage
   ]);
+
+  const popLinePath = d3shape.line(
+    (d: ForecastData) => scaleDate(d.date),
+    (d: ForecastData) => scalePercentage(d.pop))
+    .curve(d3shape.curveBumpX)
+  (forecastData);
 
   const hours = hourly.map((hour, index, allHours) => {
     //const previous = index > 0 ? allHours[index - 1] : undefined;
@@ -181,7 +187,32 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
       <StyledText style={{ fontWeight: '700', marginBottom: 8 }}>
         Today
       </StyledText>
-      <Svg width={width} height={height}>
+      <Svg width={width} height={height} style={{ marginLeft: -8 }}>
+        <Defs>
+          <LinearGradient
+            id="precipitationGradient"
+            x1="0%"
+            y1="0%"
+            x2="0%"
+            y2="100%"
+          >
+            <Stop
+              offset="0%"
+              stopColor={colors.rain}
+              stopOpacity="0.9"
+            />
+            <Stop
+              offset="90%"
+              stopColor={colors.rain}
+              stopOpacity="0.2"
+            />
+            <Stop
+              offset="100%"
+              stopColor={colors.rain}
+              stopOpacity="0"
+            />
+          </LinearGradient>
+        </Defs>
         <G x={0} y={0}>
           { temperaturePath ? (
             <Path
@@ -210,12 +241,19 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
               fill="none"
             />
             ) : undefined }
-          { (popPath && popLabels.length > 0) ? (
-            <Path
-              d={popPath}
-              fill="#3a7ca5"
-              fillOpacity={0.4}
-            />
+          { (popFillPath && popLinePath && hasChanceOfPrecip) ? (
+            <>
+              <Path
+                d={popFillPath}
+                fill="url(#precipitationGradient)"
+                fillOpacity={0.3}
+              />
+              <Path
+                d={popLinePath}
+                stroke="url(#precipitationGradient)"
+                fill="none"
+              />
+            </>
           ) : undefined }
           { popLabels.map((label, index) => (
             <Text
@@ -224,7 +262,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
               y={label.y}
               fontSize={10}
               textAnchor="middle"
-              fill="#2f6690"
+              fill={colors.rain}
             >
               {label.text}
             </Text>
@@ -251,7 +289,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
           ))} */}
         </G>
       </Svg>
-      <View style={{ position: "relative", height: 40 }}>
+      <View style={{ width: width, position: "relative", height: 40, marginLeft: -8 }}>
         {hours.map((hour, index) => (
           <View key={index} style={{ position: "absolute", left: hour.x - 18, width: 36, display: "flex", alignItems: "center" }}>
             <StyledText style={{ fontSize: 10 }}>

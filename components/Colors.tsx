@@ -20,41 +20,29 @@ type Palette = {
   secondary: string;
   back: string;
   onBackground: string;
+  rain: string;
 }
 
 const main = {
   primary: "#303F9F",
   secondary: "#BDBDBD",
+  rain: "#3a7ca5",
   // success: "#00897B", // confirm
   // warning: "#303F9F", // warning
   // error: "#C62828", // remove
   // info: "#673AB7", // help
 }
 
-// export const colors = {
-//   accent: '#FAD41B',
-//   back: '#FAF8EB',
-//   dark: '#54565B',
-//   light: '#76777B',
-//   lighter: '#939598',
-// };
-
 export const light: Palette = {
   ...main,
   back: CoolGrey.Neutral50,
   onBackground: CoolGrey.Neutral800,
-  //surface: CoolGrey.Neutral100,
-  //onPrimary: CoolGrey.Neutral800,
-  //onSecondary: CoolGrey.Neutral500,
 }
 
 export const dark: Palette = {
   ...main,
   back: CoolGrey.Neutral900,
   onBackground: CoolGrey.Neutral100,
-  //surface: CoolGrey.Neutral100,
-  //onPrimary: CoolGrey.Neutral800,
-  //onSecondary: CoolGrey.Neutral500,
 }
 
 // high emphasis: 87% opacity

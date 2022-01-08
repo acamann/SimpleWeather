@@ -18,7 +18,7 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
 
   const { colors } = useColorSchemePalette();
 
-  const width = Dimensions.get("window").width - 24;
+  const width = Dimensions.get("window").width - 16;
   const height = 124;
 
   const forecastData = daily.flatMap(day => {
@@ -45,7 +45,7 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
 
   const scaleX = d3scale.scaleTime()
     .domain([forecastData[0].date, forecastData[forecastData.length - 1].date])
-    .range([12, width - 24]);
+    .range([12, width - 8]);
 
   const temperatures = forecastData.map(t => t.value);
   const scaleY = d3scale.scaleLinear()
@@ -88,7 +88,7 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
       <StyledText style={{ fontWeight: '700', marginBottom: 16 }}>
         This Week
       </StyledText>
-      <Svg width={width} height={height}>
+      <Svg width={width} height={height} style={{ marginLeft: -8 }}>
         <G x={0} y={0}>
           { line ? (
             <Path
@@ -111,7 +111,7 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
           ))}
         </G>
       </Svg>
-      <View style={{ position: "relative", height: 40 }}>
+      <View style={{ width: width, position: "relative", height: 40, marginLeft: -8 }}>
         {days.map((day, index) => (
           <View key={index} style={{ position: "absolute", left: day.x - 12, width: 24 }}>
             <StyledText style={{ fontSize: 12, textAlign: "center" }}>
