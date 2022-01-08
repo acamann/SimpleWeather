@@ -131,23 +131,23 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
   ];
 
   // Precipitation labels
-  const popLabels: Label[] = [];
+  // const popLabels: Label[] = [];
 
-  if (highPrecip.pop > 0) {
-    popLabels.push({
-      x: scaleDate(highPrecip.date),
-      y: scalePercentage(highPrecip.pop) - 5,
-      text: formatPercent(highPrecip.pop)
-    })
-  }
+  // if (highPrecip.pop > 0) {
+  //   popLabels.push({
+  //     x: scaleDate(highPrecip.date),
+  //     y: scalePercentage(highPrecip.pop) - 5,
+  //     text: formatPercent(highPrecip.pop)
+  //   })
+  // }
 
-  if (lowPrecip.pop > 0) {
-    popLabels.push({
-      x: scaleDate(lowPrecip.date),
-      y: scalePercentage(lowPrecip.pop) - 10,
-      text: formatPercent(lowPrecip.pop)
-    })
-  }
+  // if (lowPrecip.pop > 0) {
+  //   popLabels.push({
+  //     x: scaleDate(lowPrecip.date),
+  //     y: scalePercentage(lowPrecip.pop) - 10,
+  //     text: formatPercent(lowPrecip.pop)
+  //   })
+  // }
 
   // // RAIN volume
 
@@ -255,7 +255,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
               />
             </>
           ) : undefined }
-          { popLabels.map((label, index) => (
+          {/* { popLabels.map((label, index) => (
             <Text
               key={index}
               x={label.x}
@@ -266,7 +266,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
             >
               {label.text}
             </Text>
-          ))}
+          ))} */}
           {/* { (rainPath && rainLabels.length > 0) ? (
             <Path
               d={rainPath}

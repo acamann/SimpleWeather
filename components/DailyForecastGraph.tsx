@@ -3,7 +3,7 @@ import { View, StyleSheet, Dimensions } from 'react-native';
 import { DailyWeather, Weather } from '../api/models';
 import * as d3scale from "d3-scale";
 import * as d3shape from "d3-shape";
-import Svg, { G, Path, Text } from "react-native-svg";
+import Svg, { Defs, G, LinearGradient, Path, Stop, Text } from "react-native-svg";
 import { useColorSchemePalette } from './Colors';
 import StyledText from './StyledText';
 import WeatherIcon from './WeatherIcon';
@@ -11,6 +11,17 @@ import { getDayOfWeek } from '../utils/common';
 
 interface DailyForecastProps {
   daily: DailyWeather[];
+}
+
+interface TemperatureData {
+  date: Date;
+  feels_like: number;
+  temp: number;
+}
+
+interface PopData {
+  date: Date;
+  pop: number;
 }
 
 const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastProps) => {
@@ -21,47 +32,86 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
   const width = Dimensions.get("window").width - 16;
   const height = 124;
 
-  const forecastData = daily.flatMap(day => {
+  const temperatureData: TemperatureData[] = daily.flatMap(day => {
     const dayDate = new Date(day.dt * 1000);
     return [
       {
-        date: new Date(dayDate.setHours(5)),
-        value: day.temp.morn,
+        date: new Date(dayDate.setHours(4)),
+        temp: day.temp.morn,
+        feels_like: day.feels_like.morn,
       },
       {
-        date: new Date(dayDate.setHours(11)),
-        value: day.temp.day,
+        date: new Date(dayDate.setHours(10)),
+        temp: day.temp.day,
+        feels_like: day.feels_like.day
       },
       {
-        date: new Date(dayDate.setHours(17)),
-        value: day.temp.eve,
+        date: new Date(dayDate.setHours(16)),
+        temp: day.temp.eve,
+        feels_like: day.feels_like.eve,
       },
       {
-        date: new Date(dayDate.setHours(23)),
-        value: day.temp.night,
+        date: new Date(dayDate.setHours(22)),
+        temp: day.temp.night,
+        feels_like: day.feels_like.night,
       }
     ];
   });
 
-  const scaleX = d3scale.scaleTime()
-    .domain([forecastData[0].date, forecastData[forecastData.length - 1].date])
+  const popData: PopData[] = daily.map(day => {
+    const dayDate = new Date(day.dt * 1000);
+    return {
+      date: new Date(dayDate.setHours(12)),
+      pop: day.pop
+    };
+  });
+
+  const scaleDate = d3scale.scaleTime()
+    .domain([temperatureData[0].date, temperatureData[temperatureData.length - 1].date])
     .range([12, width - 8]);
 
-  const temperatures = forecastData.map(t => t.value);
-  const scaleY = d3scale.scaleLinear()
-    .domain([Math.min(...temperatures), Math.max(...temperatures)])
-    .range([height - 24, 12]);
 
-  const line = d3shape.line(
-      (d: { date: Date, value: number }) => scaleX(d.date),
-      (d: { date: Date, value: number }) => scaleY(d.value))
+  const forecastSortedPrecip = [...popData].sort((a, b) => b.pop - a.pop);
+  const lowPrecip = forecastSortedPrecip[forecastSortedPrecip.length - 1];
+  const highPrecip = forecastSortedPrecip[0];
+
+  const hasChanceOfPrecip = highPrecip.pop > 0;
+
+  const temperatures = temperatureData.map(t => t.temp);
+  const scaleTemp = d3scale.scaleLinear()
+    .domain([Math.min(...temperatures), Math.max(...temperatures)])
+    .range([height - 24, hasChanceOfPrecip ? 36 : 12]);
+
+  const tempPath = d3shape.line(
+      (d: TemperatureData) => scaleDate(d.date),
+      (d: TemperatureData) => scaleTemp(d.temp))
     .curve(d3shape.curveBumpX)
-    (forecastData);
+    (temperatureData);
+
+  const scalePercentage = d3scale.scaleLinear()
+    .domain([0, 1])
+    .range([height, 12]);
+
+  const popFillPath = d3shape.line(
+    (d: PopData) => scaleDate(d.date),
+    (d: PopData) => scalePercentage(d.pop))
+    .curve(d3shape.curveBumpX)
+  ([
+    { date: new Date(popData[0].date.setHours(0)), pop: 0 }, // start at 0 to fill area below percentage
+    ...popData,
+    { date: new Date(popData[popData.length - 1].date.setHours(23)), pop: 0 } // end at 0 to fill area below percentage
+  ]);
+
+  const popLinePath = d3shape.line(
+    (d: PopData) => scaleDate(d.date),
+    (d: PopData) => scalePercentage(d.pop))
+    .curve(d3shape.curveBumpX)
+  (popData);
 
   const days = daily.map(day => {
     const date = new Date(day.dt * 1000);
     return {
-      x: scaleX(date),
+      x: scaleDate(date),
       label: getDayOfWeek(date)[0],
       weather: day.weather
     }
@@ -71,13 +121,13 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
     const date = new Date(day.dt * 1000);
     return [
       {
-        x: scaleX(new Date(date.setHours(11))),
-        y: scaleY(day.temp.day) - 5,
+        x: scaleDate(new Date(date.setHours(11))),
+        y: scaleTemp(day.temp.day) - 5,
         text: `${Math.round(day.temp.day)}`
       },
       {
-        x: scaleX(new Date(date.setHours(23))),
-        y: scaleY(day.temp.night) + 10,
+        x: scaleDate(new Date(date.setHours(23))),
+        y: scaleTemp(day.temp.night) + 10,
         text: `${Math.round(day.temp.night)}`
       }
     ];
@@ -85,14 +135,39 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
 
   return (
     <View style={styles.wrapper}>
-      <StyledText style={{ fontWeight: '700', marginBottom: 16 }}>
+      <StyledText style={{ fontWeight: '700', marginBottom: 8 }}>
         This Week
       </StyledText>
       <Svg width={width} height={height} style={{ marginLeft: -8 }}>
+        <Defs>
+          <LinearGradient
+            id="precipitationGradient"
+            x1="0%"
+            y1="0%"
+            x2="0%"
+            y2="100%"
+          >
+            <Stop
+              offset="0%"
+              stopColor={colors.rain}
+              stopOpacity="0.9"
+            />
+            <Stop
+              offset="90%"
+              stopColor={colors.rain}
+              stopOpacity="0.2"
+            />
+            <Stop
+              offset="100%"
+              stopColor={colors.rain}
+              stopOpacity="0"
+            />
+          </LinearGradient>
+        </Defs>
         <G x={0} y={0}>
-          { line ? (
+          { tempPath ? (
             <Path
-              d={line}
+              d={tempPath}
               stroke={colors.onBackground}
               fill="none"
             />
@@ -109,6 +184,20 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
               {label.text}
             </Text>
           ))}
+          { (popFillPath && popLinePath && hasChanceOfPrecip) ? (
+            <>
+              <Path
+                d={popFillPath}
+                fill="url(#precipitationGradient)"
+                fillOpacity={0.3}
+              />
+              <Path
+                d={popLinePath}
+                stroke="url(#precipitationGradient)"
+                fill="none"
+              />
+            </>
+          ) : undefined }
         </G>
       </Svg>
       <View style={{ width: width, position: "relative", height: 40, marginLeft: -8 }}>
