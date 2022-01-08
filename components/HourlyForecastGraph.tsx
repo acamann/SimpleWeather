@@ -33,7 +33,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
   const { colors } = useColorSchemePalette();
 
   const width = Dimensions.get("window").width - 24;
-  const height = 140;
+  const height = 180;
 
   const forecastData: ForecastData[] = hourly.map(hour => ({
     date: new Date(hour.dt * 1000),
@@ -66,9 +66,11 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
 
   const scaleTemps = d3scale.scaleLinear()
     .domain([low.degrees, high.degrees])
-    .range([height - 24, 12]);
+    .range([height - 24, 36]);
 
-  const scalePercentage = d3scale.scaleLinear().domain([0, 1]).range([height - 24, 12]);
+  const scalePercentage = d3scale.scaleLinear()
+    .domain([0, 1])
+    .range([height - 24, 12]);
 
   const temperaturePath = d3shape.line(
       (d: ForecastData) => scaleDate(d.date),
@@ -140,7 +142,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
 
   return (
     <View style={styles.wrapper}>
-      <StyledText style={{ fontWeight: '700', marginBottom: 16 }}>
+      <StyledText style={{ fontWeight: '700', marginBottom: 8 }}>
         Today
       </StyledText>
       <Svg width={width} height={height}>
@@ -175,10 +177,8 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
           { (popPath && popLabels.length > 0) ? (
             <Path
               d={popPath}
-              stroke="#2f6690"
               fill="#3a7ca5"
-              fillOpacity={0.1}
-              strokeOpacity={0.5}
+              fillOpacity={0.4}
             />
             ) : undefined }
             { popLabels.map((label, index) => (
