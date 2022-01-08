@@ -72,7 +72,6 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
 
 
   const forecastSortedPrecip = [...popData].sort((a, b) => b.pop - a.pop);
-  const lowPrecip = forecastSortedPrecip[forecastSortedPrecip.length - 1];
   const highPrecip = forecastSortedPrecip[0];
 
   const hasChanceOfPrecip = highPrecip.pop > 0;
@@ -97,7 +96,7 @@ const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastPr
     (d: PopData) => scalePercentage(d.pop))
     .curve(d3shape.curveBumpX)
   ([
-    { date: new Date(popData[0].date.setHours(0)), pop: 0 }, // start at 0 to fill area below percentage
+    { date: new Date(popData[0].date.setHours(4)), pop: 0 }, // start at 0 to fill area below percentage
     ...popData,
     { date: new Date(popData[popData.length - 1].date.setHours(23)), pop: 0 } // end at 0 to fill area below percentage
   ]);
