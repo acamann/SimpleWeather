@@ -64,9 +64,15 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
     degrees: maxFeelsLike.feels_like > maxTemp.temp ? maxFeelsLike.feels_like : maxTemp.temp
   }
 
+  const forecastSortedPrecip = [...forecastData].sort((a, b) => b.pop - a.pop);
+  const lowPrecip = forecastSortedPrecip[forecastSortedPrecip.length - 1];
+  const highPrecip = forecastSortedPrecip[0];
+
+  const hasChanceOfPrecip = highPrecip.pop > 0;
+
   const scaleTemps = d3scale.scaleLinear()
     .domain([low.degrees, high.degrees])
-    .range([height - 24, 36]);
+    .range([height - 24, hasChanceOfPrecip ? 36 : 12]);
 
   const scalePercentage = d3scale.scaleLinear()
     .domain([0, 1])
@@ -119,10 +125,8 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
   ];
 
   // Precipitation labels
-  const forecastSortedPrecip = [...forecastData].sort((a, b) => b.pop - a.pop);
   const popLabels: Label[] = [];
 
-  const highPrecip = forecastSortedPrecip[0];
   if (highPrecip.pop > 0) {
     popLabels.push({
       x: scaleDate(highPrecip.date),
@@ -131,7 +135,6 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
     })
   }
 
-  const lowPrecip = forecastSortedPrecip[forecastSortedPrecip.length - 1];
   if (lowPrecip.pop > 0) {
     popLabels.push({
       x: scaleDate(lowPrecip.date),
@@ -139,6 +142,39 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
       text: formatPercent(lowPrecip.pop)
     })
   }
+
+  // // RAIN volume
+
+  // const rainDesc = [...forecastData].sort((a, b) => b.rain - a.rain);
+  // const minRain = rainDesc[rainDesc.length - 1];
+  // const maxRain = rainDesc[0];
+
+  // const scaleRain = d3scale.scaleLinear()
+  // .domain([minRain.rain, maxRain.rain])
+  // .range([height - 24, 12]);
+
+  // const rainPath = d3shape.line(
+  //   (d: ForecastData) => scaleDate(d.date),
+  //   (d: ForecastData) => scaleRain(d.rain))
+  //   .curve(d3shape.curveBumpX)
+  // (forecastData);
+
+  // const rainLabels: Label[] = [];
+  // if (maxRain.rain > 0) {
+  //   rainLabels.push({
+  //     x: scaleDate(maxRain.date),
+  //     y: scaleRain(maxRain.rain) - 5,
+  //     text: `${maxRain.rain}`
+  //   })
+  // }
+
+  // if (minRain.rain > 0) {
+  //   rainLabels.push({
+  //     x: scaleDate(minRain.date),
+  //     y: scaleRain(minRain.rain) - 10,
+  //     text: `${minRain.rain}`
+  //   })
+  // }
 
   return (
     <View style={styles.wrapper}>
@@ -180,8 +216,8 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
               fill="#3a7ca5"
               fillOpacity={0.4}
             />
-            ) : undefined }
-            { popLabels.map((label, index) => (
+          ) : undefined }
+          { popLabels.map((label, index) => (
             <Text
               key={index}
               x={label.x}
@@ -192,7 +228,27 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
             >
               {label.text}
             </Text>
-            ))}
+          ))}
+          {/* { (rainPath && rainLabels.length > 0) ? (
+            <Path
+              d={rainPath}
+              stroke="#3a7ca5"
+              fill="none"
+              strokeOpacity={0.6}
+            />
+          ) : undefined }
+          { rainLabels.map((label, index) => (
+            <Text
+              key={index}
+              x={label.x}
+              y={label.y}
+              fontSize={10}
+              textAnchor="middle"
+              fill="#2f6690"
+            >
+              {label.text}
+            </Text>
+          ))} */}
         </G>
       </Svg>
       <View style={{ position: "relative", height: 40 }}>
