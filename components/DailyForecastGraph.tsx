@@ -1,125 +1,205 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Dimensions } from 'react-native';
 import { DailyWeather, Weather } from '../api/models';
 import * as d3scale from "d3-scale";
 import * as d3shape from "d3-shape";
-import Svg, { G, Path, Text } from "react-native-svg";
-import { colors } from './Colors';
+import Svg, { Defs, G, LinearGradient, Path, Stop, Text } from "react-native-svg";
+import { useColorSchemePalette } from './Colors';
 import StyledText from './StyledText';
 import WeatherIcon from './WeatherIcon';
+import { getDayOfWeek } from '../utils/common';
 
 interface DailyForecastProps {
   daily: DailyWeather[];
 }
 
+interface TemperatureData {
+  date: Date;
+  feels_like: number;
+  temp: number;
+}
+
+interface PopData {
+  date: Date;
+  pop: number;
+}
+
 const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastProps) => {
   const daily = props.daily;
 
-  const [line, setLine] = React.useState<string | null>(null);
-  const [days, setDays] = React.useState<{ x: number, label: string, weather: Weather[] }[]>([]);
-  const [labels, setLabels] = React.useState<{ x: number, y: number, text: string }[]>([]);
-  const [width, setWidth] = React.useState<number>(0);
-  const height = 80;
+  const { colors } = useColorSchemePalette();
 
-  React.useEffect(() => {
-    const forecastData = daily.flatMap(day => {
-      const dayDate = new Date(day.dt * 1000);
-      return [
-        {
-          date: new Date(dayDate.setHours(5)),
-          value: day.temp.morn,
-        },
-        {
-          date: new Date(dayDate.setHours(11)),
-          value: day.temp.day,
-        },
-        {
-          date: new Date(dayDate.setHours(17)),
-          value: day.temp.eve,
-        },
-        {
-          date: new Date(dayDate.setHours(23)),
-          value: day.temp.night,
-        }
-      ];
-    });
+  const width = Dimensions.get("window").width - 16;
+  const height = 124;
 
-    const scaleX = d3scale.scaleTime()
-      .domain([forecastData[0].date, forecastData[forecastData.length - 1].date])
-      .range([0, width]);
-
-    const temperatures = forecastData.map(t => t.value);
-    const scaleY = d3scale.scaleLinear()
-      .domain([Math.min(...temperatures), Math.max(...temperatures)])
-      .range([height, 0]);
-
-    setLine(d3shape.line(
-        (d: { date: Date, value: number }) => scaleX(d.date),
-        (d: { date: Date, value: number }) => scaleY(d.value))
-      .curve(d3shape.curveBumpX)
-      (forecastData));
-
-    setDays(daily.map(day => {
-      const date = new Date(day.dt * 1000);
-      return {
-        x: scaleX(date),
-        label: date.toLocaleDateString("en-US", { weekday: 'short' })[0],
-        weather: day.weather
+  const temperatureData: TemperatureData[] = daily.flatMap(day => {
+    const dayDate = new Date(day.dt * 1000);
+    return [
+      {
+        date: new Date(dayDate.setHours(4)),
+        temp: day.temp.morn,
+        feels_like: day.feels_like.morn,
+      },
+      {
+        date: new Date(dayDate.setHours(10)),
+        temp: day.temp.day,
+        feels_like: day.feels_like.day
+      },
+      {
+        date: new Date(dayDate.setHours(16)),
+        temp: day.temp.eve,
+        feels_like: day.feels_like.eve,
+      },
+      {
+        date: new Date(dayDate.setHours(22)),
+        temp: day.temp.night,
+        feels_like: day.feels_like.night,
       }
-    }));
+    ];
+  });
 
-    setLabels(daily.flatMap((day, index) => {
-      const date = new Date(day.dt * 1000);
-      const labels = [
-        {
-          x: scaleX(new Date(date.setHours(11))),
-          y: scaleY(day.temp.max) + 10,
-          text: `${Math.round(day.temp.max)}`
-        }
-      ];
-      if (index > 0) {
-        labels.push({
-          x: scaleX(new Date(date.setHours(6))),
-          y: scaleY(day.temp.min) + 10,
-          text: `${Math.round(day.temp.min)}`
-        })
+  const popData: PopData[] = daily.map(day => {
+    const dayDate = new Date(day.dt * 1000);
+    return {
+      date: new Date(dayDate.setHours(12)),
+      pop: day.pop
+    };
+  });
+
+  const scaleDate = d3scale.scaleTime()
+    .domain([temperatureData[0].date, temperatureData[temperatureData.length - 1].date])
+    .range([12, width - 8]);
+
+
+  const forecastSortedPrecip = [...popData].sort((a, b) => b.pop - a.pop);
+  const highPrecip = forecastSortedPrecip[0];
+
+  const hasChanceOfPrecip = highPrecip.pop > 0;
+
+  const temperatures = temperatureData.map(t => t.temp);
+  const scaleTemp = d3scale.scaleLinear()
+    .domain([Math.min(...temperatures), Math.max(...temperatures)])
+    .range([height - 24, hasChanceOfPrecip ? 36 : 12]);
+
+  const tempPath = d3shape.line(
+      (d: TemperatureData) => scaleDate(d.date),
+      (d: TemperatureData) => scaleTemp(d.temp))
+    .curve(d3shape.curveBumpX)
+    (temperatureData);
+
+  const scalePercentage = d3scale.scaleLinear()
+    .domain([0, 1])
+    .range([height, 12]);
+
+  const popFillPath = d3shape.line(
+    (d: PopData) => scaleDate(d.date),
+    (d: PopData) => scalePercentage(d.pop))
+    .curve(d3shape.curveBumpX)
+  ([
+    { date: new Date(popData[0].date.setHours(4)), pop: 0 }, // start at 0 to fill area below percentage
+    ...popData,
+    { date: new Date(popData[popData.length - 1].date.setHours(23)), pop: 0 } // end at 0 to fill area below percentage
+  ]);
+
+  const popLinePath = d3shape.line(
+    (d: PopData) => scaleDate(d.date),
+    (d: PopData) => scalePercentage(d.pop))
+    .curve(d3shape.curveBumpX)
+  (popData);
+
+  const days = daily.map(day => {
+    const date = new Date(day.dt * 1000);
+    return {
+      x: scaleDate(date),
+      label: getDayOfWeek(date)[0],
+      weather: day.weather
+    }
+  });
+
+  const labels = daily.flatMap((day, index) => {
+    const date = new Date(day.dt * 1000);
+    return [
+      {
+        x: scaleDate(new Date(date.setHours(11))),
+        y: scaleTemp(day.temp.day) - 5,
+        text: `${Math.round(day.temp.day)}`
+      },
+      {
+        x: scaleDate(new Date(date.setHours(23))),
+        y: scaleTemp(day.temp.night) + 10,
+        text: `${Math.round(day.temp.night)}`
       }
-      return labels;
-    }));
-  }, [width]);
+    ];
+  });
 
   return (
-    <View style={styles.wrapper} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
-      <StyledText style={{ fontWeight: '700' }}>
+    <View style={styles.wrapper}>
+      <StyledText style={{ fontWeight: '700', marginBottom: 8 }}>
         This Week
       </StyledText>
-      <Svg width={width} height={height} style={{ overflow: "visible", marginVertical: "24px" }}>
-        { width > 0 ? (
-          <G x={0} y={0}>
-            { line ? (
+      <Svg width={width} height={height} style={{ marginLeft: -8 }}>
+        <Defs>
+          <LinearGradient
+            id="precipitationGradient"
+            x1="0%"
+            y1="0%"
+            x2="0%"
+            y2="100%"
+          >
+            <Stop
+              offset="0%"
+              stopColor={colors.rain}
+              stopOpacity="0.9"
+            />
+            <Stop
+              offset="90%"
+              stopColor={colors.rain}
+              stopOpacity="0.2"
+            />
+            <Stop
+              offset="100%"
+              stopColor={colors.rain}
+              stopOpacity="0"
+            />
+          </LinearGradient>
+        </Defs>
+        <G x={0} y={0}>
+          { tempPath ? (
+            <Path
+              d={tempPath}
+              stroke={colors.onBackground}
+              fill="none"
+            />
+          ) : undefined }
+          { labels.map((label, index) => (
+            <Text
+              key={index}
+              x={label.x}
+              y={label.y}
+              fontSize={10}
+              textAnchor="middle"
+              fill={colors.onBackground}
+            >
+              {label.text}
+            </Text>
+          ))}
+          { (popFillPath && popLinePath && hasChanceOfPrecip) ? (
+            <>
               <Path
-                d={line}
-                stroke={colors.light}
+                d={popFillPath}
+                fill="url(#precipitationGradient)"
+                fillOpacity={0.3}
+              />
+              <Path
+                d={popLinePath}
+                stroke="url(#precipitationGradient)"
                 fill="none"
               />
-            ) : undefined }
-            { labels.map((label, index) => (
-              <Text
-                key={index}
-                x={label.x}
-                y={label.y}
-                fontSize={10}
-                textAnchor="middle"
-                fontFamily="Roboto, Helvetica, Arial, sans-serif"
-                fill={colors.dark}
-              >
-                {label.text}
-              </Text>
-            ))}
-          </G>
-        ) : undefined}
+            </>
+          ) : undefined }
+        </G>
       </Svg>
-      <View style={{ position: "relative", height: 40 }}>
+      <View style={{ width: width, position: "relative", height: 40, marginLeft: -8 }}>
         {days.map((day, index) => (
           <View key={index} style={{ position: "absolute", left: day.x - 12, width: 24 }}>
             <StyledText style={{ fontSize: 12, textAlign: "center" }}>

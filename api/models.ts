@@ -7,9 +7,9 @@ export interface Weather {
 }
 
 export interface CurrentWeather {
-  dt: Date,
-  sunrise: Date,
-  sunset: Date,
+  dt: number,
+  sunrise: number,
+  sunset: number,
   temp: number,
   feels_like: number,
   pressure: number,
@@ -19,9 +19,10 @@ export interface CurrentWeather {
   clouds: number,
   visibility: number,
   wind_speed: number,
+  wind_gust: number,
   wind_deg: number,
   weather: Weather[],
-  rain: {
+  rain?: {
     "1h": number
   }
 }
@@ -51,10 +52,10 @@ export interface HourlyWeather {
 
 export interface DailyWeather {
   dt: number,
-  sunrise: Date,
-  sunset: Date,
-  moonrise: Date,
-  moonset: Date,
+  sunrise: number,
+  sunset: number,
+  moonrise: number,
+  moonset: number,
   moon_phase: number,
   temp: {
     day: number,
@@ -74,11 +75,12 @@ export interface DailyWeather {
   humidity: number,
   dew_point: number,
   wind_speed: number,
+  wind_gust: number,
   wind_deg: number,
   weather: Weather[],
   clouds: number,
   pop: number,
-  rain: number,
+  rain?: number,
   uvi: number
 }
 

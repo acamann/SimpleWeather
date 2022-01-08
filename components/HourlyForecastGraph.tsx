@@ -1,13 +1,13 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Dimensions } from 'react-native';
 import { HourlyWeather, Weather } from '../api/models';
 import * as d3scale from "d3-scale";
 import * as d3shape from "d3-shape";
-import Svg, { G, Path, Text } from "react-native-svg";
-import { colors } from './Colors';
+import Svg, { Defs, G, LinearGradient, Path, Stop, Text } from "react-native-svg";
+import { useColorSchemePalette } from './Colors';
 import StyledText from './StyledText';
 import WeatherIcon from './WeatherIcon';
-import { formatPercent, formatTemp } from '../utils/common';
+import { formatPercent, formatTemp, formatTime } from '../utils/common';
 
 interface HourlyForecastGraphProps {
   hourly: HourlyWeather[];
@@ -16,6 +16,7 @@ interface HourlyForecastGraphProps {
 interface ForecastData {
   date: Date;
   feels_like: number;
+  temp: number;
   pop: number;
   rain: number;
 }
@@ -29,155 +30,266 @@ interface Label {
 const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyForecastGraphProps) => {
   const hourly = props.hourly.slice(0, 24);
 
-  const [temperaturePath, setTemperaturePath] = React.useState<string | null>(null);
-  const [popPath, setPopPath] = React.useState<string | null>(null);
-  const [hours, setHours] = React.useState<{ x: number, label?: string, weather?: Weather }[]>([]);
-  const [tempLabels, setTempLabels] = React.useState<Label[]>([]);
-  const [popLabels, setPopLabels] = React.useState<Label[]>([]);
-  const [width, setWidth] = React.useState<number>(0);
-  const height = 100;
+  const { colors } = useColorSchemePalette();
 
-  React.useEffect(() => {
-    const forecastData: ForecastData[] = hourly.map(hour => ({
-      date: new Date(hour.dt * 1000),
-      feels_like: hour.feels_like,
-      pop: hour.pop,
-      rain: hour.rain?.['1h'] ?? 0
-    }));
+  const width = Dimensions.get("window").width - 16;
+  const height = 180;
 
-    const scaleDate = d3scale.scaleTime()
-      .domain([forecastData[0].date, forecastData[forecastData.length - 1].date])
-      .range([0, width]);
+  const forecastData: ForecastData[] = hourly.map(hour => ({
+    date: new Date(hour.dt * 1000),
+    feels_like: hour.feels_like,
+    temp: hour.temp,
+    pop: hour.pop,
+    rain: hour.rain?.['1h'] ?? 0
+  }));
 
-    const forecastSortedDesc = [...forecastData].sort((a, b) => b.feels_like - a.feels_like);
-    const low = forecastSortedDesc[forecastSortedDesc.length - 1];
-    const high = forecastSortedDesc[0];
-    const scaleTemps = d3scale.scaleLinear()
-      .domain([low.feels_like, high.feels_like])
-      .range([height, 0]);
+  const scaleDate = d3scale.scaleTime()
+    .domain([forecastData[0].date, forecastData[forecastData.length - 1].date])
+    .range([12, width - 8]);
 
-    const scalePercentage = d3scale.scaleLinear().domain([0, 1]).range([height, 0]);
+  const feelsLikeDesc = [...forecastData].sort((a, b) => b.feels_like - a.feels_like);
+  const minFeelsLike = feelsLikeDesc[feelsLikeDesc.length - 1];
+  const maxFeelsLike = feelsLikeDesc[0];
 
-    setTemperaturePath(d3shape.line(
-        (d: ForecastData) => scaleDate(d.date),
-        (d: ForecastData) => scaleTemps(d.feels_like))
-      .curve(d3shape.curveBumpX)
-      (forecastData));
+  const tempDesc = [...forecastData].sort((a, b) => b.temp - a.temp);
+  const minTemp = tempDesc[tempDesc.length - 1];
+  const maxTemp = tempDesc[0];
 
-    setPopPath(d3shape.line(
+  const low = {
+    date: minFeelsLike.feels_like < minTemp.temp ? minFeelsLike.date : minTemp.date,
+    degrees: minFeelsLike.feels_like < minTemp.temp ? minFeelsLike.feels_like : minTemp.temp
+  };
+  const high = {
+    date: maxFeelsLike.feels_like > maxTemp.temp ? maxFeelsLike.date : maxTemp.date,
+    degrees: maxFeelsLike.feels_like > maxTemp.temp ? maxFeelsLike.feels_like : maxTemp.temp
+  }
+
+  const forecastSortedPrecip = [...forecastData].sort((a, b) => b.pop - a.pop);
+  const lowPrecip = forecastSortedPrecip[forecastSortedPrecip.length - 1];
+  const highPrecip = forecastSortedPrecip[0];
+
+  const hasChanceOfPrecip = highPrecip.pop > 0;
+
+  const scaleTemps = d3scale.scaleLinear()
+    .domain([low.degrees, high.degrees])
+    .range([height - 24, hasChanceOfPrecip ? 36 : 12]);
+
+  const scalePercentage = d3scale.scaleLinear()
+    .domain([0, 1])
+    .range([height, 12]);
+
+  const temperaturePath = d3shape.line(
       (d: ForecastData) => scaleDate(d.date),
-      (d: ForecastData) => scalePercentage(d.pop))
-      .curve(d3shape.curveBumpX)
-    ([
-      { date: forecastData[0].date, pop: 0, feels_like: 0, rain: 0 }, // start at 0 to fill area below percentage
-      ...forecastData,
-      { date: forecastData[forecastData.length - 1].date, pop: 0, feels_like: 0, rain: 0 } // end at 0 to fill area below percentage
-    ]));
+      (d: ForecastData) => scaleTemps(d.temp))
+    .curve(d3shape.curveBumpX)
+    (forecastData);
 
-    setHours(hourly.map((hour, index, allHours) => {
-      //const previous = index > 0 ? allHours[index - 1] : undefined;
-      const hourDate = new Date(hour.dt * 1000);
-      return {
-        x: scaleDate(hourDate),
-        label: index % 3 === 1 ? hourDate.toLocaleTimeString("en-US", { hour: 'numeric' }) : undefined,
-        weather: index % 3 === 1 ? hour.weather[0] : undefined // or hour.weather[0].id !== previous?.weather[0].id
-      }
-    }));
+  const feelsLikePath = d3shape.line(
+      (d: ForecastData) => scaleDate(d.date),
+      (d: ForecastData) => scaleTemps(d.feels_like))
+    .curve(d3shape.curveBumpX)
+    (forecastData);
 
-    // Temperature Labels
-    setTempLabels([
-      {
-        x: scaleDate(high.date),
-        y: scaleTemps(high.feels_like) + 10,
-        text: formatTemp(high.feels_like)
-      },
-      {
-        x: scaleDate(low.date),
-        y: scaleTemps(low.feels_like) + 10,
-        text: formatTemp(low.feels_like)
-      }
-    ]);
+  const popFillPath = d3shape.line(
+    (d: ForecastData) => scaleDate(d.date),
+    (d: ForecastData) => scalePercentage(d.pop))
+    .curve(d3shape.curveBumpX)
+  ([
+    { date: forecastData[0].date, pop: 0, temp: 0, feels_like: 0, rain: 0 }, // start at 0 to fill area below percentage
+    ...forecastData,
+    { date: forecastData[forecastData.length - 1].date, pop: 0, temp: 0, feels_like: 0, rain: 0 } // end at 0 to fill area below percentage
+  ]);
 
-    // Precipitation labels
-    const forecastSortedPrecip = [...forecastData].sort((a, b) => b.pop - a.pop);
-    const popLabels: Label[] = [];
+  const popLinePath = d3shape.line(
+    (d: ForecastData) => scaleDate(d.date),
+    (d: ForecastData) => scalePercentage(d.pop))
+    .curve(d3shape.curveBumpX)
+  (forecastData);
 
-    const highPrecip = forecastSortedPrecip[0];
-    if (highPrecip.pop > 0) {
-      popLabels.push({
-        x: scaleDate(highPrecip.date),
-        y: scalePercentage(highPrecip.pop),
-        text: formatPercent(highPrecip.pop)
-      })
+  const hours = hourly.map((hour, index, allHours) => {
+    //const previous = index > 0 ? allHours[index - 1] : undefined;
+    const hourDate = new Date(hour.dt * 1000);
+    return {
+      x: scaleDate(hourDate),
+      label: index % 3 === 1 ? formatTime(hourDate) : undefined,
+      weather: index % 3 === 1 ? hour.weather[0] : undefined // or hour.weather[0].id !== previous?.weather[0].id
     }
+  });
 
-    const lowPrecip = forecastSortedPrecip[forecastSortedPrecip.length - 1];
-    if (lowPrecip.pop > 0) {
-      popLabels.push({
-        x: scaleDate(lowPrecip.date),
-        y: scalePercentage(lowPrecip.pop),
-        text: formatPercent(lowPrecip.pop)
-      })
+  // Temperature Labels
+  const tempLabels = [
+    {
+      x: scaleDate(high.date),
+      y: scaleTemps(high.degrees) - 5,
+      text: formatTemp(high.degrees)
+    },
+    {
+      x: scaleDate(low.date),
+      y: scaleTemps(low.degrees) + 10,
+      text: formatTemp(low.degrees)
     }
+  ];
 
-    setPopLabels(popLabels);
+  // Precipitation labels
+  // const popLabels: Label[] = [];
 
-  }, [width]);
+  // if (highPrecip.pop > 0) {
+  //   popLabels.push({
+  //     x: scaleDate(highPrecip.date),
+  //     y: scalePercentage(highPrecip.pop) - 5,
+  //     text: formatPercent(highPrecip.pop)
+  //   })
+  // }
+
+  // if (lowPrecip.pop > 0) {
+  //   popLabels.push({
+  //     x: scaleDate(lowPrecip.date),
+  //     y: scalePercentage(lowPrecip.pop) - 10,
+  //     text: formatPercent(lowPrecip.pop)
+  //   })
+  // }
+
+  // // RAIN volume
+
+  // const rainDesc = [...forecastData].sort((a, b) => b.rain - a.rain);
+  // const minRain = rainDesc[rainDesc.length - 1];
+  // const maxRain = rainDesc[0];
+
+  // const scaleRain = d3scale.scaleLinear()
+  // .domain([minRain.rain, maxRain.rain])
+  // .range([height - 24, 12]);
+
+  // const rainPath = d3shape.line(
+  //   (d: ForecastData) => scaleDate(d.date),
+  //   (d: ForecastData) => scaleRain(d.rain))
+  //   .curve(d3shape.curveBumpX)
+  // (forecastData);
+
+  // const rainLabels: Label[] = [];
+  // if (maxRain.rain > 0) {
+  //   rainLabels.push({
+  //     x: scaleDate(maxRain.date),
+  //     y: scaleRain(maxRain.rain) - 5,
+  //     text: `${maxRain.rain}`
+  //   })
+  // }
+
+  // if (minRain.rain > 0) {
+  //   rainLabels.push({
+  //     x: scaleDate(minRain.date),
+  //     y: scaleRain(minRain.rain) - 10,
+  //     text: `${minRain.rain}`
+  //   })
+  // }
 
   return (
-    <View style={styles.wrapper} onLayout={(event) => setWidth(event.nativeEvent.layout.width)}>
-      <StyledText style={{ fontWeight: '700' }}>
+    <View style={styles.wrapper}>
+      <StyledText style={{ fontWeight: '700', marginBottom: 8 }}>
         Today
       </StyledText>
-      <Svg width={width} height={height} style={{ overflow: "visible", marginVertical: "24px" }}>
-        { width > 0 ? (
-          <G x={0} y={0}>
-            { temperaturePath ? (
+      <Svg width={width} height={height} style={{ marginLeft: -8 }}>
+        <Defs>
+          <LinearGradient
+            id="precipitationGradient"
+            x1="0%"
+            y1="0%"
+            x2="0%"
+            y2="100%"
+          >
+            <Stop
+              offset="0%"
+              stopColor={colors.rain}
+              stopOpacity="0.9"
+            />
+            <Stop
+              offset="90%"
+              stopColor={colors.rain}
+              stopOpacity="0.2"
+            />
+            <Stop
+              offset="100%"
+              stopColor={colors.rain}
+              stopOpacity="0"
+            />
+          </LinearGradient>
+        </Defs>
+        <G x={0} y={0}>
+          { temperaturePath ? (
+            <Path
+              d={temperaturePath}
+              stroke={colors.onBackground}
+              fill="none"
+            />
+          ) : undefined }
+          { tempLabels.map((label, index) => (
+            <Text
+              key={index}
+              x={label.x}
+              y={label.y}
+              fontSize={10}
+              textAnchor="middle"
+              fill={colors.onBackground}
+            >
+              {label.text}
+            </Text>
+          ))}
+          { feelsLikePath ? (
+            <Path
+              d={feelsLikePath}
+              stroke={colors.onBackground}
+              opacity={0.4}
+              fill="none"
+            />
+            ) : undefined }
+          { (popFillPath && popLinePath && hasChanceOfPrecip) ? (
+            <>
               <Path
-                d={temperaturePath}
-                stroke={colors.light}
+                d={popFillPath}
+                fill="url(#precipitationGradient)"
+                fillOpacity={0.3}
+              />
+              <Path
+                d={popLinePath}
+                stroke="url(#precipitationGradient)"
                 fill="none"
               />
-             ) : undefined }
-            { tempLabels.map((label, index) => (
-              <Text
-                key={index}
-                x={label.x}
-                y={label.y}
-                fontSize={10}
-                textAnchor="middle"
-                fontFamily="Roboto, Helvetica, Arial, sans-serif"
-                fill={colors.dark}
-              >
-                {label.text}
-              </Text>
-            ))}
-            { (popPath && popLabels.length > 0) ? (
-              <Path
-                d={popPath}
-                stroke="#2f6690"
-                fill="#3a7ca5"
-                fillOpacity={0.1}
-                strokeOpacity={0.5}
-              />
-             ) : undefined }
-             { popLabels.map((label, index) => (
-              <Text
-                key={index}
-                x={label.x}
-                y={label.y}
-                fontSize={10}
-                textAnchor="middle"
-                fontFamily="Roboto, Helvetica, Arial, sans-serif"
-                fill="#2f6690"
-              >
-                {label.text}
-              </Text>
-             ))}
-          </G>
-        ) : undefined}
+            </>
+          ) : undefined }
+          {/* { popLabels.map((label, index) => (
+            <Text
+              key={index}
+              x={label.x}
+              y={label.y}
+              fontSize={10}
+              textAnchor="middle"
+              fill={colors.rain}
+            >
+              {label.text}
+            </Text>
+          ))} */}
+          {/* { (rainPath && rainLabels.length > 0) ? (
+            <Path
+              d={rainPath}
+              stroke="#3a7ca5"
+              fill="none"
+              strokeOpacity={0.6}
+            />
+          ) : undefined }
+          { rainLabels.map((label, index) => (
+            <Text
+              key={index}
+              x={label.x}
+              y={label.y}
+              fontSize={10}
+              textAnchor="middle"
+              fill="#2f6690"
+            >
+              {label.text}
+            </Text>
+          ))} */}
+        </G>
       </Svg>
-      <View style={{ position: "relative", height: 40 }}>
+      <View style={{ width: width, position: "relative", height: 40, marginLeft: -8 }}>
         {hours.map((hour, index) => (
           <View key={index} style={{ position: "absolute", left: hour.x - 18, width: 36, display: "flex", alignItems: "center" }}>
             <StyledText style={{ fontSize: 10 }}>

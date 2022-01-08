@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, GestureResponderEvent, Pressable, Image } from 'react-native';
+import { View, StyleSheet, GestureResponderEvent, Pressable } from 'react-native';
 import StyledText from "./StyledText";
-import { colors } from './Colors';
+import { useColorSchemePalette } from './Colors';
 import { CurrentWeather, MinuteWeather } from '../api/models';
 import WeatherIcon from './WeatherIcon';
 import { formatTemp, formatTimeFromUnix } from '../utils/common';
@@ -25,10 +25,38 @@ const CurrentWeatherView: React.FC<CurrentWeatherViewProps> = (props: CurrentWea
   const onPress = props.onPress;
   const fullScreenDetails = props.fullScreenDetails ?? false;
 
+  const { colors } = useColorSchemePalette();
+
+  const styles = StyleSheet.create({
+    currentWeather: {
+      width: '100%',
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'flex-start'
+    },
+    temps: {
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'flex-end'
+    },
+    temp: {
+      fontSize: 64,
+      color: colors.onBackground,
+    },
+    icon: {
+      width: 100,
+      height: 100
+    }
+  });
+
   const precepitationForEachMinuteInMillimeters = minutely.map(m => m.precipitation);
 
   return (
-    <Pressable style={{ display: 'flex', justifyContent: 'space-between', flex: fullScreenDetails ? 1 : undefined, width: '100%' }} onPress={onPress}>
+    <Pressable
+      style={{ display: 'flex', justifyContent: 'space-between', flex: fullScreenDetails ? 1 : undefined, width: '100%' }}
+      onPress={onPress}
+    >
       <>
         <View style={styles.currentWeather}>
           <WeatherIcon
@@ -61,7 +89,7 @@ const CurrentWeatherView: React.FC<CurrentWeatherViewProps> = (props: CurrentWea
                   <View key={minute.dt} style={{
                     width: `${100 / 60}%`,
                     height: minute.precipitation === 0 ? 1 : minute.precipitation * 10,
-                    backgroundColor: colors.accent
+                    backgroundColor: colors.primary
                   }} ></View>
                 )}
               </View>
@@ -88,26 +116,3 @@ const CurrentWeatherView: React.FC<CurrentWeatherViewProps> = (props: CurrentWea
 }
 
 export default CurrentWeatherView;
-
-const styles = StyleSheet.create({
-  currentWeather: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'flex-start'
-  },
-  temps: {
-    flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-end'
-  },
-  temp: {
-    fontSize: 64,
-    color: colors.dark,
-  },
-  icon: {
-    width: 100,
-    height: 100
-  }
-});

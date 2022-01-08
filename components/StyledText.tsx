@@ -1,20 +1,14 @@
 import React from 'react';
 import { Text, StyleSheet, TextProps } from 'react-native';
-import { colors } from './Colors';
+import { useColorSchemePalette } from './Colors';
 
 const StyledText: React.FC<TextProps> = (props: TextProps) => {
+  const { colors } = useColorSchemePalette();
   return (
-    <Text {...props} style={[props.style, styles.text]}>
+    <Text {...props} style={[props.style, { color: colors.onBackground }]}>
       {props.children}
     </Text>
   );
 }
 
 export default StyledText;
-
-const styles = StyleSheet.create({
-  text: {
-    fontFamily: "Roboto, Helvetica, Arial, sans-serif",
-    color: colors.dark,
-  }
-});
