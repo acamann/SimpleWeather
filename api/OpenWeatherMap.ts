@@ -1,17 +1,17 @@
-import { MapData, OneCallWeatherResponse } from './models';
+import { FiveDayWeatherResponse, MapData, OneCallWeatherResponse } from './models';
 import { OPEN_WEATHER_MAP_API_KEY } from 'react-native-dotenv';
 import { getTileFromCoordinates, homeCoordinates } from '../utils/map';
 
 const apiKey = OPEN_WEATHER_MAP_API_KEY;
 
-interface GetCurrentWeatherPayload {
+interface GetWeatherPayload<TResponse> {
   latitude: number;
   longitude: number;
-  onSuccess: (weather: OneCallWeatherResponse) => void;
+  onSuccess: (weather: TResponse) => void;
   onFailure: (error: any) => void;
 }
 
-export const getCurrentWeather = (payload: GetCurrentWeatherPayload): Promise<void> => {
+export const getCurrentWeather = (payload: GetWeatherPayload<OneCallWeatherResponse>): Promise<void> => {
 
   // // Testing
   //payload.onSuccess(getRandomWeather());
@@ -24,6 +24,22 @@ export const getCurrentWeather = (payload: GetCurrentWeatherPayload): Promise<vo
     return Promise.reject();
   }
   return fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${latitude}&lon=${longitude}&exclude=${exclude}&appid=${apiKey}&units=imperial`)
+    .then((response) => response.json())
+    .then((json) => {
+      payload.onSuccess(json);
+    })
+    .catch((error) => {
+      payload.onFailure(error);
+    });
+};
+
+export const getDailyWeather = (payload: GetWeatherPayload<FiveDayWeatherResponse>): Promise<void> => {
+  const { latitude, longitude } = payload;
+  if (!apiKey) {
+    payload.onFailure("API Key not set");
+    return Promise.reject();
+  }
+  return fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=imperial`)
     .then((response) => response.json())
     .then((json) => {
       payload.onSuccess(json);
