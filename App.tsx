@@ -25,9 +25,9 @@ export default function App() {
 
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [showTemp, setShowTemp] = useState<boolean>(true);
-  const [showFeelsLike, setShowFeelsLike] = useState<boolean>(false);
+  const [showFeelsLike, setShowFeelsLike] = useState<boolean>(true);
   const [showPop, setShowPop] = useState<boolean>(true);
-  const [showLabels, setShowLabels] = useState<boolean>(false);
+  const [showLabels, setShowLabels] = useState<boolean>(true);
 
   const [focus, setFocus] = useState<Focus>("none");
 

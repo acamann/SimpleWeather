@@ -110,7 +110,8 @@ const FiveDayForecastGraph: React.FC<FiveDayForecastGraphProps> = ({
 
   const days = data.list.filter(datum => {
     const date = new Date(datum.dt * 1000);
-    return date.getHours() === 12;
+    const hour = date.getHours();
+    return hour > 10 && hour < 14;
   }).map(datum => {
     const date = new Date(datum.dt * 1000);
     return {
