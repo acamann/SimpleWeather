@@ -20,6 +20,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.andycamann.mysimpleweather",
+      "userInterfaceStyle": "automatic",
       "buildNumber": "1.0.0",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Location permission is required in order to display local weather."
@@ -27,6 +28,7 @@
     },
     "android": {
       "package": "com.andycamann.mysimpleweather",
+      "userInterfaceStyle": "automatic",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -38,7 +40,8 @@
       ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "userInterfaceStyle": "automatic"
     }
   }
 }
