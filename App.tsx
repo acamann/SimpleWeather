@@ -109,10 +109,6 @@ export default function App() {
             nearestCity={nearestCity}
             onPress={(): void => setFocus("current")}
           />
-          <Button
-            onPress={(): void => setShowSettings(!showSettings)}
-            title="Settings"
-          />
           <Pressable onPress={(): void => setFocus("hourly")} style={{ width: "100%" }}>
             <HourlyForecastGraph hourly={weather.hourly} />
           </Pressable>
@@ -129,6 +125,10 @@ export default function App() {
               <ActivityIndicator size="large" style={{ flex: 1 }} />
             )}
           </Pressable>
+          <Button
+            onPress={(): void => setShowSettings(!showSettings)}
+            title="Settings"
+          />
         </>
       ) : focus === "current" ? (
         <>
@@ -152,14 +152,14 @@ export default function App() {
         </Pressable>
       ) : undefined }
       <Modal
-        animationType="fade"
+        animationType="none"
         transparent={true}
         visible={showSettings}
         onRequestClose={() => {
           setShowSettings(!showSettings);
         }}
       >
-        <View style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+        <View style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", height: "100%" }}>
           <View style={{ width: "70%", backgroundColor: colors.back, borderColor: colors.onBackground, borderStyle: "solid", borderWidth: 1, borderRadius: 8, padding: 16, opacity: 0.9 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 8 }}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -198,7 +198,7 @@ export default function App() {
                 value={showLabels}
               />
             </View>
-            <View style={{ marginTop: 8 }}>
+            <View style={{ marginTop: 8, alignItems: "center" }}>
               <Button
                 onPress={() => setShowSettings(!showSettings)}
                 title="Done"
