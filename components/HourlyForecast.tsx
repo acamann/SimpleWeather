@@ -29,13 +29,13 @@ const HourlyForecast: React.FC<HourlyForecastProps> = (props: HourlyForecastProp
           <StyledText style={styles.forecastDateTime}>
             {formatTimeFromUnix(hour.dt)}
           </StyledText>
-          <StyledText>
+          <StyledText style={{ width: 60 }}>
             {formatTemp(hour.temp)}
           </StyledText>
-          <StyledText style={{ width: 40 }}>
+          <StyledText style={{ width: 60 }}>
             {hour.pop > 0 ? formatPercent(hour.pop) : undefined}
           </StyledText>
-          <StyledText style={{ width: 30 }}>
+          <StyledText style={{ width: 60 }}>
             {hour.rain ? `${hour.rain["1h"]}` : undefined}
           </StyledText>
           <WeatherCondition weather={hour.weather} />
