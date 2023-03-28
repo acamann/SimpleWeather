@@ -160,11 +160,11 @@ export default function App() {
         }}
       >
         <View style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", height: "100%" }}>
-          <View style={{ width: "70%", backgroundColor: colors.back, borderColor: colors.onBackground, borderStyle: "solid", borderWidth: 1, borderRadius: 8, padding: 16, opacity: 0.9 }}>
+          <View style={{ width: 200, backgroundColor: colors.back, borderColor: colors.onBackground, borderStyle: "solid", borderWidth: 1, borderRadius: 8, padding: 16, opacity: 1 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 8 }}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 {/* <WeatherIcon conditionId={302} width={30} /> */}
-                <StyledText>Show Precipitation</StyledText>
+                <StyledText>Precipitation</StyledText>
               </View>
               <Switch
                 onValueChange={() => setShowPop(prev => !prev)}
@@ -173,7 +173,7 @@ export default function App() {
             </View>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 8 }}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <StyledText>Show Temperature</StyledText>
+                <StyledText>Temperature</StyledText>
               </View>
               <Switch
                 onValueChange={() => setShowTemp(prev => !prev)}
@@ -182,7 +182,7 @@ export default function App() {
             </View>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 8 }}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <StyledText>Show Feels Like</StyledText>
+                <StyledText>Feels Like</StyledText>
               </View>
               <Switch
                 onValueChange={() => setShowFeelsLike(prev => !prev)}
@@ -191,7 +191,7 @@ export default function App() {
             </View>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 8 }}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <StyledText>Show Labels</StyledText>
+                <StyledText>Labels</StyledText>
               </View>
               <Switch
                 onValueChange={() => setShowLabels(prev => !prev)}
