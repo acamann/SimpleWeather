@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, StyleSheet, GestureResponderEvent, Pressable } from 'react-native';
 import StyledText from "./StyledText";
 import { useColorSchemePalette } from './Colors';
@@ -7,6 +7,7 @@ import WeatherIcon from './WeatherIcon';
 import { formatTemp, formatTimeFromUnix } from '../utils/common';
 import { homeCoordinates } from '../utils/map';
 import RadarMap from './RadarMap';
+import { SettingsContext } from './SettingsContext';
 
 interface CurrentWeatherViewProps {
   current: CurrentWeather;
@@ -25,7 +26,8 @@ const CurrentWeatherView: React.FC<CurrentWeatherViewProps> = (props: CurrentWea
   const onPress = props.onPress;
   const fullScreenDetails = props.fullScreenDetails ?? false;
 
-  const { colors } = useColorSchemePalette();
+  const { darkMode } = useContext(SettingsContext);
+  const { colors } = useColorSchemePalette(darkMode);
 
   const styles = StyleSheet.create({
     currentWeather: {

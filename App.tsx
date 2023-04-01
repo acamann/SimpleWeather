@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, ActivityIndicator, Alert, Pressable, ScrollView, RefreshControl, Switch, View, Modal, Button, useColorScheme } from 'react-native';
 import { FiveDayWeatherResponse, OneCallWeatherResponse } from './api/models';
 import { getCurrentWeather, getDailyWeather } from './api/OpenWeatherMap';
@@ -16,10 +16,12 @@ import StyledText from './components/StyledText';
 import WeatherIcon from './components/WeatherIcon';
 import usePersistedState from './components/usePersistedState';
 import { Picker } from '@react-native-picker/picker';
+import { DefaultSettings, SettingsContext, SettingsProvider } from './components/SettingsContext';
+import SettingsModal from './components/SettingsModal';
 
 type Focus = "none" | "current" | "hourly" | "daily";
 
-export default function App() {
+const SimpleWeather = () => {
   const [weather, setWeather] = useState<OneCallWeatherResponse>();
   const [fiveDayWeather, setFiveDayWeather] = useState<FiveDayWeatherResponse>();
   const [nearestCity, setNearestCity] = useState<string>();
@@ -27,16 +29,9 @@ export default function App() {
 
   const [showSettings, setShowSettings] = useState<boolean>(false);
 
-  const [showTemp, setShowTemp] = usePersistedState<boolean>("settings.temp", true);
-  const [showFeelsLike, setShowFeelsLike] = usePersistedState<boolean>("settings.feelsLike", true);
-  const [showPop, setShowPop] = usePersistedState<boolean>("settings.percip", true);
-  const [showLabels, setShowLabels] = usePersistedState<boolean>("settings.labels", true);
-  const [darkModeSetting, setDarkModeSetting] = usePersistedState<boolean | undefined>("settings.darkMode", undefined);
-
   const [focus, setFocus] = useState<Focus>("none");
 
-  const theme = useColorScheme(); 
-  const darkMode = darkModeSetting ?? theme === "dark";
+  const { darkMode } = useContext(SettingsContext);
   const { colors } = useColorSchemePalette(darkMode);
 
   const styles = StyleSheet.create({
@@ -99,136 +94,73 @@ export default function App() {
   }, []);
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      showsHorizontalScrollIndicator={false}
-      showsVerticalScrollIndicator={false}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-    >
-      { !weather ? (
-        <ActivityIndicator size="large" style={{ flex: 1 }} />
-      ) : focus === "none" ? (
-        <>
-          <CurrentWeatherView
-            current={weather.current}
-            minutely={weather.minutely ?? []}
-            nearestCity={nearestCity}
-            onPress={(): void => setFocus("current")}
-          />
-          <Pressable onPress={(): void => setFocus("hourly")} style={{ width: "100%" }}>
-            <HourlyForecastGraph hourly={weather.hourly} />
-          </Pressable>
-          <Pressable onPress={(): void => setFocus("daily")} style={{ width: "100%" }}>
-            { fiveDayWeather ? (
-              <FiveDayForecastGraph
-                data={fiveDayWeather}
-                showPop={showPop}
-                showTemp={showTemp}
-                showFeelsLike={showFeelsLike}
-                showLabels={showLabels}
-              />
-            ) : (
-              <ActivityIndicator size="large" style={{ flex: 1 }} />
-            )}
-          </Pressable>
-          <Button
-            onPress={(): void => setShowSettings(!showSettings)}
-            title="Settings"
-          />
-        </>
-      ) : focus === "current" ? (
-        <>
-          <CurrentWeatherView
-            current={weather.current}
-            minutely={weather.minutely}
-            nearestCity={nearestCity}
-            onPress={(): void => setFocus("none")}
-            fullScreenDetails
-          />
-        </>
-      ) : focus === "hourly" ? (
-        <HourlyForecast
-          hourly={weather.hourly}
-          hoursToShow={24}
-          onPress={(): void => setFocus("none")}
-        />
-      ) : focus === "daily" ? (
-        <Pressable onPress={(): void => setFocus("none")} style={{ width: "100%" }}>
-          <DailyForecast daily={weather.daily} />
-        </Pressable>
-      ) : undefined }
-      <Modal
-        animationType="none"
-        transparent={true}
-        visible={showSettings}
-        onRequestClose={() => {
-          setShowSettings(!showSettings);
-        }}
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        <View style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", height: "100%" }}>
-          <View style={{ width: 200, backgroundColor: colors.back, borderColor: colors.onBackground, borderStyle: "solid", borderWidth: 1, borderRadius: 8, padding: 16, opacity: 1 }}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 8 }}>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                {/* <WeatherIcon conditionId={302} width={30} /> */}
-                <StyledText>Precipitation</StyledText>
-              </View>
-              <Switch
-                onValueChange={() => setShowPop(prev => !prev)}
-                value={showPop}
-              />
-            </View>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 8 }}>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <StyledText>Temperature</StyledText>
-              </View>
-              <Switch
-                onValueChange={() => setShowTemp(prev => !prev)}
-                value={showTemp}
-              />
-            </View>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 8 }}>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <StyledText>Feels Like</StyledText>
-              </View>
-              <Switch
-                onValueChange={() => setShowFeelsLike(prev => !prev)}
-                value={showFeelsLike}
-              />
-            </View>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 8 }}>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <StyledText>Labels</StyledText>
-              </View>
-              <Switch
-                onValueChange={() => setShowLabels(prev => !prev)}
-                value={showLabels}
-              />
-            </View>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 8 }}>
-              <Picker
-                selectedValue={darkModeSetting === undefined ? "inherit" : darkModeSetting ? "dark" : "light"}
-                onValueChange={(itemValue, itemIndex) => {
-                  if (itemValue === "inherit") {
-                    setDarkModeSetting(undefined);
-                  } else {
-                    setDarkModeSetting(itemValue === "dark");
-                  }
-                }}>
-                <Picker.Item label="Use Device Theme" value="inherit" />
-                <Picker.Item label="Light Mode" value="light" />
-                <Picker.Item label="Dark Mode" value="dark" />
-              </Picker>
-            </View>
-            <View style={{ marginTop: 8, alignItems: "center" }}>
-              <Button
-                onPress={() => setShowSettings(!showSettings)}
-                title="Done"
-              />
-            </View>
-          </View>
-        </View>
-      </Modal>
-      <StatusBar style="auto" />
-    </ScrollView>
+        { !weather ? (
+          <ActivityIndicator size="large" style={{ flex: 1 }} />
+        ) : focus === "none" ? (
+          <>
+            <CurrentWeatherView
+              current={weather.current}
+              minutely={weather.minutely ?? []}
+              nearestCity={nearestCity}
+              onPress={(): void => setFocus("current")}
+            />
+            <Pressable onPress={(): void => setFocus("hourly")} style={{ width: "100%" }}>
+              <HourlyForecastGraph hourly={weather.hourly} />
+            </Pressable>
+            <Pressable onPress={(): void => setFocus("daily")} style={{ width: "100%" }}>
+              { fiveDayWeather ? (
+                <FiveDayForecastGraph
+                  data={fiveDayWeather}
+                />
+              ) : (
+                <ActivityIndicator size="large" style={{ flex: 1 }} />
+              )}
+            </Pressable>
+            <Button
+              onPress={(): void => setShowSettings(!showSettings)}
+              title="Settings"
+            />
+          </>
+        ) : focus === "current" ? (
+          <>
+            <CurrentWeatherView
+              current={weather.current}
+              minutely={weather.minutely}
+              nearestCity={nearestCity}
+              onPress={(): void => setFocus("none")}
+              fullScreenDetails
+            />
+          </>
+        ) : focus === "hourly" ? (
+          <HourlyForecast
+            hourly={weather.hourly}
+            hoursToShow={24}
+            onPress={(): void => setFocus("none")}
+          />
+        ) : focus === "daily" ? (
+          <Pressable onPress={(): void => setFocus("none")} style={{ width: "100%" }}>
+            <DailyForecast daily={weather.daily} />
+          </Pressable>
+        ) : undefined }
+        <SettingsModal
+          show={showSettings}
+          onClose={() => setShowSettings(false)}
+        />
+        <StatusBar style="auto" />
+      </ScrollView>
   );
+}
+
+export default function App() {
+  return (
+    <SettingsProvider>
+      <SimpleWeather />
+    </SettingsProvider>
+  )
 }

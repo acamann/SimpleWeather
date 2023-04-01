@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { DailyWeather, Weather } from '../api/models';
 import * as d3scale from "d3-scale";
@@ -8,6 +8,7 @@ import { useColorSchemePalette } from './Colors';
 import StyledText from './StyledText';
 import WeatherIcon from './WeatherIcon';
 import { getDayOfWeek } from '../utils/common';
+import { SettingsContext } from './SettingsContext';
 
 interface DailyForecastProps {
   daily: DailyWeather[];
@@ -27,7 +28,9 @@ interface PopData {
 const DailyForecastGraph: React.FC<DailyForecastProps> = (props: DailyForecastProps) => {
   const daily = props.daily;
 
-  const { colors } = useColorSchemePalette();
+  // have a color context that uses the settings context
+  const { darkMode } = useContext(SettingsContext);
+  const { colors } = useColorSchemePalette(darkMode);
 
   const width = Dimensions.get("window").width - 16;
   const height = 124;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { DailyWeather, FiveDayWeatherResponse, Weather } from '../api/models';
 import * as d3scale from "d3-scale";
@@ -8,13 +8,10 @@ import { useColorSchemePalette } from './Colors';
 import StyledText from './StyledText';
 import WeatherIcon from './WeatherIcon';
 import { getDayOfWeek } from '../utils/common';
+import { SettingsContext } from './SettingsContext';
 
 interface FiveDayForecastGraphProps {
   data: FiveDayWeatherResponse;
-  showPop: boolean;
-  showFeelsLike: boolean;
-  showTemp: boolean;
-  showLabels: boolean;
 }
 
 interface ForecastData {
@@ -27,12 +24,15 @@ interface ForecastData {
 
 const FiveDayForecastGraph: React.FC<FiveDayForecastGraphProps> = ({
   data,
-  showPop,
-  showFeelsLike,
-  showTemp,
-  showLabels
 }) => {
-  const { colors } = useColorSchemePalette();
+  const {
+    showTemp,
+    showFeelsLike,
+    showPop,
+    showLabels,
+    darkMode
+  } = useContext(SettingsContext);
+  const { colors } = useColorSchemePalette(darkMode);
 
   const width = Dimensions.get("window").width - 16;
   const height = 180;

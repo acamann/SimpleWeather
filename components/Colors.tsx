@@ -49,7 +49,7 @@ export const dark: Palette = {
 // medium emphasis: 60% opacity
 // disabled: 38% opacity
 
-export const useColorSchemePalette = (darkMode?: boolean): { theme: ColorSchemeName, colors: Palette } => {
-  const theme = useColorScheme();  
-  return { theme, colors: (darkMode === true || theme === "dark") ? dark : light }
+export const useColorSchemePalette = (darkMode: boolean | "inherit"): { theme: ColorSchemeName, colors: Palette } => {
+  const theme = useColorScheme(); 
+  return { theme, colors: darkMode === true || (darkMode === "inherit" && theme === "dark") ? dark : light }
 }

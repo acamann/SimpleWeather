@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { HourlyWeather, Weather } from '../api/models';
 import * as d3scale from "d3-scale";
@@ -8,6 +8,7 @@ import { useColorSchemePalette } from './Colors';
 import StyledText from './StyledText';
 import WeatherIcon from './WeatherIcon';
 import { formatPercent, formatTemp, formatTime } from '../utils/common';
+import { SettingsContext } from './SettingsContext';
 
 interface HourlyForecastGraphProps {
   hourly: HourlyWeather[];
@@ -30,7 +31,8 @@ interface Label {
 const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyForecastGraphProps) => {
   const hourly = props.hourly.slice(0, 24);
 
-  const { colors } = useColorSchemePalette();
+  const { darkMode } = useContext(SettingsContext);
+  const { colors } = useColorSchemePalette(darkMode);
 
   const width = Dimensions.get("window").width - 16;
   const height = 180;

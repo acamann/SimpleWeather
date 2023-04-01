@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import Svg, { SvgProps, Path } from "react-native-svg"
 import { useColorSchemePalette } from './Colors';
+import { SettingsContext } from './SettingsContext';
 
 type WeatherIconProps = SvgProps & {
   conditionId?: number;
@@ -8,7 +9,8 @@ type WeatherIconProps = SvgProps & {
 
 const WeatherIcon: React.FC<WeatherIconProps> = (props: WeatherIconProps) => {
   const { conditionId, ...rest } = props;
-  const { colors } = useColorSchemePalette();
+  const { darkMode } = useContext(SettingsContext);
+  const { colors } = useColorSchemePalette(darkMode);
   return conditionId ? (
     <Svg
       viewBox="0 0 30 30"
