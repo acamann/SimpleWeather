@@ -9,24 +9,24 @@ function usePersistedState<T>(uniqueKey: string, defaultValue: T): Return<T> {
   const [value, setValue] = useState<T>(defaultValue);
 
   useEffect(() => {
-    const asyncWrap = async () => {
-      const storedValue = await AsyncStorage.getItem(STORAGE_KEY);
-      return storedValue;
-    }
-    asyncWrap().then((storedValue) => {
-      console.log("asyncWrap ran:", storedValue)
+    const getItemAsync = async () => await AsyncStorage.getItem(STORAGE_KEY);
+    getItemAsync().then((storedValue) => {
+      //console.log("asyncWrap ran:", storedValue)
       if (storedValue !== null) {
-        setValue(JSON.parse(storedValue) as T);
+        if (storedValue === "__undefined__") {
+          setValue(undefined as T);
+        } else {
+          setValue(JSON.parse(storedValue) as T);
+        }
       };
     })
   }, []);
 
   useEffect(() => {
-    if (value !== undefined) {
-      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(value)).then(() => {
-        console.log(" > ASYNC STORAGE UPDATED ->", value)
-      });
-    }
+    const setItemAsync = async () => await AsyncStorage.setItem(STORAGE_KEY, value === undefined ? "__undefined__" : JSON.stringify(value));
+    setItemAsync().then(() => {
+      //console.log(" > ASYNC STORAGE UPDATED ->", value)
+    });
   }, [value]);
 
   return [value, setValue];

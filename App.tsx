@@ -1,7 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useMemo, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StyleSheet, ActivityIndicator, Alert, Pressable, ScrollView, RefreshControl, Switch, View, Modal, Button } from 'react-native';
+import { StyleSheet, ActivityIndicator, Alert, Pressable, ScrollView, RefreshControl, Switch, View, Modal, Button, useColorScheme } from 'react-native';
 import { FiveDayWeatherResponse, OneCallWeatherResponse } from './api/models';
 import { getCurrentWeather, getDailyWeather } from './api/OpenWeatherMap';
 import { getNearestCity } from './api/ReverseGeocoding';
@@ -16,6 +15,7 @@ import FiveDayForecastGraph from './components/FiveDayForecastGraph';
 import StyledText from './components/StyledText';
 import WeatherIcon from './components/WeatherIcon';
 import usePersistedState from './components/usePersistedState';
+import { Picker } from '@react-native-picker/picker';
 
 type Focus = "none" | "current" | "hourly" | "daily";
 
@@ -31,10 +31,12 @@ export default function App() {
   const [showFeelsLike, setShowFeelsLike] = usePersistedState<boolean>("settings.feelsLike", true);
   const [showPop, setShowPop] = usePersistedState<boolean>("settings.percip", true);
   const [showLabels, setShowLabels] = usePersistedState<boolean>("settings.labels", true);
-  const [darkMode, setDarkMode] = usePersistedState<boolean>("settings.darkMode", false);
+  const [darkModeSetting, setDarkModeSetting] = usePersistedState<boolean | undefined>("settings.darkMode", undefined);
 
   const [focus, setFocus] = useState<Focus>("none");
 
+  const theme = useColorScheme(); 
+  const darkMode = darkModeSetting ?? theme === "dark";
   const { colors } = useColorSchemePalette(darkMode);
 
   const styles = StyleSheet.create({
@@ -203,13 +205,19 @@ export default function App() {
               />
             </View>
             <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 8 }}>
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <StyledText>Dark Mode</StyledText>
-              </View>
-              <Switch
-                onValueChange={() => setDarkMode(prev => !prev)}
-                value={darkMode}
-              />
+              <Picker
+                selectedValue={darkModeSetting === undefined ? "inherit" : darkModeSetting ? "dark" : "light"}
+                onValueChange={(itemValue, itemIndex) => {
+                  if (itemValue === "inherit") {
+                    setDarkModeSetting(undefined);
+                  } else {
+                    setDarkModeSetting(itemValue === "dark");
+                  }
+                }}>
+                <Picker.Item label="Use Device Theme" value="inherit" />
+                <Picker.Item label="Light Mode" value="light" />
+                <Picker.Item label="Dark Mode" value="dark" />
+              </Picker>
             </View>
             <View style={{ marginTop: 8, alignItems: "center" }}>
               <Button
