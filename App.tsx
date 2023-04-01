@@ -1,5 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StyleSheet, ActivityIndicator, Alert, Pressable, ScrollView, RefreshControl, Switch, View, Modal, Button } from 'react-native';
 import { FiveDayWeatherResponse, OneCallWeatherResponse } from './api/models';
 import { getCurrentWeather, getDailyWeather } from './api/OpenWeatherMap';
@@ -14,6 +15,7 @@ import HourlyForecastGraph from './components/HourlyForecastGraph';
 import FiveDayForecastGraph from './components/FiveDayForecastGraph';
 import StyledText from './components/StyledText';
 import WeatherIcon from './components/WeatherIcon';
+import usePersistedState from './components/usePersistedState';
 
 type Focus = "none" | "current" | "hourly" | "daily";
 
@@ -24,14 +26,16 @@ export default function App() {
   const [refreshing, setRefreshing] = React.useState(false);
 
   const [showSettings, setShowSettings] = useState<boolean>(false);
-  const [showTemp, setShowTemp] = useState<boolean>(true);
-  const [showFeelsLike, setShowFeelsLike] = useState<boolean>(true);
-  const [showPop, setShowPop] = useState<boolean>(true);
-  const [showLabels, setShowLabels] = useState<boolean>(true);
+
+  const [showTemp, setShowTemp] = usePersistedState<boolean>("settings.temp", true);
+  const [showFeelsLike, setShowFeelsLike] = usePersistedState<boolean>("settings.feelsLike", true);
+  const [showPop, setShowPop] = usePersistedState<boolean>("settings.percip", true);
+  const [showLabels, setShowLabels] = usePersistedState<boolean>("settings.labels", true);
+  const [darkMode, setDarkMode] = usePersistedState<boolean>("settings.darkMode", false);
 
   const [focus, setFocus] = useState<Focus>("none");
 
-  const { colors } = useColorSchemePalette();
+  const { colors } = useColorSchemePalette(darkMode);
 
   const styles = StyleSheet.create({
     container: {
@@ -105,7 +109,7 @@ export default function App() {
         <>
           <CurrentWeatherView
             current={weather.current}
-            minutely={weather.minutely}
+            minutely={weather.minutely ?? []}
             nearestCity={nearestCity}
             onPress={(): void => setFocus("current")}
           />
@@ -196,6 +200,15 @@ export default function App() {
               <Switch
                 onValueChange={() => setShowLabels(prev => !prev)}
                 value={showLabels}
+              />
+            </View>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 8 }}>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <StyledText>Dark Mode</StyledText>
+              </View>
+              <Switch
+                onValueChange={() => setDarkMode(prev => !prev)}
+                value={darkMode}
               />
             </View>
             <View style={{ marginTop: 8, alignItems: "center" }}>
