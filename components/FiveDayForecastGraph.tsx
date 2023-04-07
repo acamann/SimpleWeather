@@ -123,18 +123,19 @@ const FiveDayForecastGraph: React.FC<FiveDayForecastGraphProps> = ({
   });
 
   const tempLabels = days.flatMap(day => {
+    const verticalOffset = 10;
     const sortedTempsForDay = data.list.filter(datum => new Date(datum.dt * 1000).getDate() === day.date.getDate()).sort((a, b) => a.main.temp - b.main.temp);
     const high = sortedTempsForDay[0];
     const low = sortedTempsForDay[sortedTempsForDay.length - 1];
     return [
       {
         x: scaleDate(new Date(high.dt * 1000)),
-        y: scaleTemps(high.main.temp),
+        y: scaleTemps(high.main.temp) + verticalOffset,
         text: `${Math.round(high.main.temp)}`
       },
       {
         x: scaleDate(new Date(low.dt * 1000)),
-        y: scaleTemps(low.main.temp),
+        y: scaleTemps(low.main.temp) - (verticalOffset / 2),
         text: `${Math.round(low.main.temp)}`
       },
     ]
