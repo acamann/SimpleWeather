@@ -180,7 +180,7 @@ const FiveDayForecastGraph: React.FC<FiveDayForecastGraphProps> = ({
               fill="none"
             />
           ) : undefined }
-          { (showTemp && showLabels) && tempLabels.map((label, index) => (
+          { (showLabels) && tempLabels.map((label, index) => (
             <Text
               key={index}
               x={label.x}

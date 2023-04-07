@@ -31,7 +31,14 @@ interface Label {
 const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyForecastGraphProps) => {
   const hourly = props.hourly.slice(0, 24);
 
-  const { darkMode } = useContext(SettingsContext);
+  const {
+    showTemp,
+    showFeelsLike,
+    showPop,
+    showLabels,
+    darkMode
+  } = useContext(SettingsContext);
+
   const { colors } = useColorSchemePalette(darkMode);
 
   const width = Dimensions.get("window").width - 16;
@@ -216,14 +223,14 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
           </LinearGradient>
         </Defs>
         <G x={0} y={0}>
-          { temperaturePath ? (
+          { showTemp && temperaturePath ? (
             <Path
               d={temperaturePath}
               stroke={colors.onBackground}
               fill="none"
             />
           ) : undefined }
-          { tempLabels.map((label, index) => (
+          { (showLabels) && tempLabels.map((label, index) => (
             <Text
               key={index}
               x={label.x}
@@ -235,7 +242,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
               {label.text}
             </Text>
           ))}
-          { feelsLikePath ? (
+          { showFeelsLike && feelsLikePath ? (
             <Path
               d={feelsLikePath}
               stroke={colors.onBackground}
@@ -243,7 +250,7 @@ const HourlyForecastGraph: React.FC<HourlyForecastGraphProps> = (props: HourlyFo
               fill="none"
             />
             ) : undefined }
-          { (popFillPath && popLinePath && hasChanceOfPrecip) ? (
+          { (showPop && popFillPath && popLinePath && hasChanceOfPrecip) ? (
             <>
               <Path
                 d={popFillPath}
